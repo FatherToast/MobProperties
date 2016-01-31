@@ -1,0 +1,16 @@
+[
+{
+  "modid": "MobProperties",
+  "name": "Mob Properties",
+  "description": "Allows advanced customization options for all mobs' drops, attributes, and NBT data.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "http://www.minecraftforum.net/topic/1153874-/",
+  "updateUrl": "",
+  "authorList": ["FatherToast"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

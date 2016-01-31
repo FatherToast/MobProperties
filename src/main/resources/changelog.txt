@@ -1,0 +1,72 @@
+0.4.3
+    - Added "Info Wand" (get it using /mpinfo <player>) - turns in-game (tile)entity nbt data to an external nbt function.
+    - New nbt function - "delete".
+    - Dimension check now uses a different method, if possible (fixes bug affecting some).
+0.4.2 - "What do you get if you multiply six by nine?"
+    - Fixed bug preventing tile entities and entities from being properly placed in the world by schematics.
+    - Added tip to look down when a JSON language error occurs.
+    - Fixed crash report for missing "function" field in functions.
+0.4.1
+    - Compressed schematic files can now be read (probably the majority of schematics you will encounter).
+    - The "command" function used within stats' "drops" function now executes on the mob's death instead of spawn.
+0.4.0
+    - The conditional check check_nbt_X can now compare string equality.
+    - Stats and pre_stats functions can now be executed from nbt data saved on the mob.
+    - Entities with their health set to 0 in pre_stats now have their spawn completely canceled.
+    - Fixed possible error in reading block ids.
+    - Now provides the string id in the warning log when a numerical id is used, assuming the numerical id is valid.
+    - The "potion" function now uses potion names (localization codes) in its "id" field. Numerical ids will log warnings.
+    - The "enchant" function now uses enchantment names (localization codes) in its "id" field. Numerical ids will log warnings.
+    - New drops/stats function - "command".
+    - New drops function - "schematic".
+    - New nbt functions - "item_id", "potion_id", "enchant_id".
+    - New conditional checks - can_see_sky, on_ground, submerged.
+0.3.5
+    - Added some additional detail to certain errors.
+    - Added an API to allow NER to collect and read modified drops.
+0.3.4
+    - Fixed "xp" function's "set" operation to now properly set base xp.
+    - Default file generation now supports mods with weird mod ids.
+0.3.3
+    - Fixed crash caused when a mob does not have a MobProperties file.
+0.3.2
+    - Added "pre_stats" as an actual allowed field. Whoops!
+0.3.1
+    - Fixed position bug with the "spawn" function when using tags.
+    - Default for "set_block" update is now 3 instead of 2.
+0.3.0
+    - Drops functions called in stats are now themselves saved and executed on death.
+      - Old individual item and entity lists will still be dropped/spawned, but no longer created.
+      - This means ALL drops functions can now be used exactly as if they were in the drops section.
+    - The nbt function "compound" now only overrides the tags defined in the function, instead of the entire compound.
+    - New life cycle event - "pre_stats".
+    - New universal function - "external".
+    - New drops function - "set_block".
+    - New nbt function - "chest_loot".
+    - New conditional checks - check_nbt_X, above_looting_X, raining, thundering, moon_phase_X, beyond_X, past_world_difficulty_X, player_online_X.
+0.2.1
+    - Reimplemented MobProperties.json (the main default property file).
+    - Now will print warnings when using numerical item/block ids (should still work for now, though).
+    - Now accepts peaceful/easy/normal/hard in addition to the numerical difficulty ids for difficulty_X conditional.
+0.2
+    - Uses a new verification system!
+      - Makes sure you are defining all required fields.
+      - Makes sure you are only using valid fields or "_comment".
+    - Made more fields required (some optional fields had defaults that made the entire function do nothing).
+    - New conditional checks - difficulty_X, in_biome_X, on_block_X, past_day_time_X, past_world_time_X.
+0.1
+    - Bumped up to beta.
+    - Mob property files are now parsed in JSON format!
+    - Mob id is no longer based on the file name (compatibility fix).
+    - New command to reload properties - /mpreload (must be in SP or be an OP to use).
+    - Item drops can now be modified by a mob's stats.
+      - All drops functions can now be called in the stats function "drops", except "default".
+    - New conditional checks - burning, wet, wither_skeleton, in_dimension_X, below_X, has_potion_X, and killed_by_X.
+    - Potions can now be applied to potion-immune mobs and/or marked as ambient ("override", "ambient").
+    - Mobs' base attributes can now be set using the "modifier" function's new "override" field.
+    - New stats functions - "drops", "nbt".
+    - New drops functions - "spawn", "xp".
+    - MobProperties.mob/json was removed temporarily.
+    - Probably some other stuff I forgot.
+0.0
+    - Initial alpha release!
