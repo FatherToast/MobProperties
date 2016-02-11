@@ -1,3 +1,8 @@
+1.0.0
+    - New conditional checks - in_biome_type_X, biome_temp_X, biome_height_below_X, is_humid, rainfall_above_X, temp_above_X, biome_temp_above_X.
+    - New drops-only conditional checks - damage_type_X, killed_with_fire, killed_with_magic, killed_with_projectile, killed_with_indirect, killed_with_explosion,
+        killed_with_unblockable, killer_on_ground, killer_burning, killer_wet, killer_submerged, killer_has_potion_X, check_killer_nbt_X, killer_wither_skeleton.
+    - The "in_biome" conditional check now uses the biome name instead of numerical id (will warn and give the proper name if you use a numerical id).
 0.4.3
     - Added "Info Wand" (get it using /mpinfo <player>) - turns in-game (tile)entity nbt data to an external nbt function.
     - New nbt function - "delete".
