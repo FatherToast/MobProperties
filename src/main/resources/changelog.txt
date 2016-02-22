@@ -1,3 +1,9 @@
+1.0.2
+    - Fixed stats used in "spawn", "riding", and "ridden_by" functions. "modifier" and "drops" stats functions should now work in these.
+    - New conditional checks - player_count_above_X, player_level_above_X, nearest_player_level_above_X.
+    - Added additional info if an "if_X" or "external" function has an invalid condition/filename.
+1.0.1
+    - Allows conditional check "in_biome_type_X" to be used.
 1.0.0
     - New conditional checks - in_biome_type_X, biome_temp_X, biome_height_below_X, is_humid, rainfall_above_X, temp_above_X, biome_temp_above_X.
     - New drops-only conditional checks - damage_type_X, killed_with_fire, killed_with_magic, killed_with_projectile, killed_with_indirect, killed_with_explosion,

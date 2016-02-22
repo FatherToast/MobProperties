@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraftforge.common.util.Constants;
 import toast.mobProperties.entry.MobDropsInfo;
 import toast.mobProperties.entry.MobStatsInfo;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
@@ -61,15 +62,15 @@ public abstract class EffectHelper {
         if (itemStack.stackTagCompound == null) {
             itemStack.setTagCompound(new NBTTagCompound());
         }
-        if (!itemStack.stackTagCompound.hasKey("display")) {
+        if (!itemStack.stackTagCompound.hasKey("display", Constants.NBT.TAG_COMPOUND)) {
             itemStack.stackTagCompound.setTag("display", new NBTTagCompound());
         }
         NBTTagCompound displayTag = itemStack.stackTagCompound.getCompoundTag("display");
-        if (!displayTag.hasKey("Lore")) {
+        if (!displayTag.hasKey("Lore", Constants.NBT.TAG_LIST)) {
             displayTag.setTag("Lore", new NBTTagList());
         }
         NBTTagString stringTag = new NBTTagString(text);
-        displayTag.getTagList("Lore", stringTag.getId()).appendTag(stringTag);
+        displayTag.getTagList("Lore", Constants.NBT.TAG_STRING).appendTag(stringTag);
     }
 
     /// Sets the item's color. No effect on most items.
@@ -77,7 +78,7 @@ public abstract class EffectHelper {
         if (itemStack.stackTagCompound == null) {
             itemStack.setTagCompound(new NBTTagCompound());
         }
-        if (!itemStack.stackTagCompound.hasKey("display")) {
+        if (!itemStack.stackTagCompound.hasKey("display", Constants.NBT.TAG_COMPOUND)) {
             itemStack.stackTagCompound.setTag("display", new NBTTagCompound());
         }
         itemStack.stackTagCompound.getCompoundTag("display").setInteger("color", color);
@@ -87,7 +88,7 @@ public abstract class EffectHelper {
     public static void addPotionEffect(EntityLivingBase entity, int id, int duration, int amplifier, boolean ambient) {
         NBTTagCompound tag = new NBTTagCompound();
         entity.writeToNBT(tag);
-        if (!tag.hasKey("ActiveEffects")) {
+        if (!tag.hasKey("ActiveEffects", Constants.NBT.TAG_LIST)) {
             tag.setTag("ActiveEffects", new NBTTagList());
         }
         NBTTagCompound potionTag = new NBTTagCompound();
@@ -103,7 +104,7 @@ public abstract class EffectHelper {
         if (ambient) {
             potionTag.setBoolean("Ambient", ambient);
         }
-        tag.getTagList("ActiveEffects", potionTag.getId()).appendTag(potionTag);
+        tag.getTagList("ActiveEffects", Constants.NBT.TAG_COMPOUND).appendTag(potionTag);
         entity.readFromNBT(tag);
     }
 
@@ -112,7 +113,7 @@ public abstract class EffectHelper {
         if (itemStack.stackTagCompound == null) {
             itemStack.stackTagCompound = new NBTTagCompound();
         }
-        if (!itemStack.stackTagCompound.hasKey("CustomPotionEffects")) {
+        if (!itemStack.stackTagCompound.hasKey("CustomPotionEffects", Constants.NBT.TAG_LIST)) {
             itemStack.stackTagCompound.setTag("CustomPotionEffects", new NBTTagList());
         }
         NBTTagCompound tag = new NBTTagCompound();
@@ -120,7 +121,7 @@ public abstract class EffectHelper {
         tag.setInteger("Duration", duration);
         tag.setByte("Amplifier", (byte) amplifier);
         tag.setBoolean("Ambient", ambient);
-        itemStack.stackTagCompound.getTagList("CustomPotionEffects", tag.getId()).appendTag(tag);
+        itemStack.stackTagCompound.getTagList("CustomPotionEffects", Constants.NBT.TAG_COMPOUND).appendTag(tag);
     }
 
     /// Adds a custom attribute modifier to the item stack.
@@ -128,7 +129,7 @@ public abstract class EffectHelper {
         if (itemStack.stackTagCompound == null) {
             itemStack.stackTagCompound = new NBTTagCompound();
         }
-        if (!itemStack.stackTagCompound.hasKey("AttributeModifiers")) {
+        if (!itemStack.stackTagCompound.hasKey("AttributeModifiers", Constants.NBT.TAG_LIST)) {
             itemStack.stackTagCompound.setTag("AttributeModifiers", new NBTTagList());
         }
         NBTTagCompound tag = new NBTTagCompound();
@@ -139,7 +140,7 @@ public abstract class EffectHelper {
         UUID id = UUID.randomUUID();
         tag.setLong("UUIDMost", id.getMostSignificantBits());
         tag.setLong("UUIDLeast", id.getLeastSignificantBits());
-        itemStack.stackTagCompound.getTagList("AttributeModifiers", tag.getId()).appendTag(tag);
+        itemStack.stackTagCompound.getTagList("AttributeModifiers", Constants.NBT.TAG_COMPOUND).appendTag(tag);
     }
 
     // Saves the entity's initialization state.
@@ -160,7 +161,7 @@ public abstract class EffectHelper {
     private static void saveXP(EntityLivingBase entity, int base, int add, double mult) {
         if (entity instanceof EntityLiving) {
             NBTTagCompound tag = entity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
-            if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE)) {
+            if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND)) {
                 entity.getEntityData().setTag(EffectHelper.TAG_BASE, tag);
             }
 
@@ -188,17 +189,17 @@ public abstract class EffectHelper {
     // Loads xp data to the mob info.
     public static void loadXP(MobDropsInfo mobDrops) {
         if (mobDrops.theEntity instanceof EntityLiving) {
-            if (!mobDrops.theEntity.getEntityData().hasKey(EffectHelper.TAG_BASE))
+            if (!mobDrops.theEntity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND))
                 return;
             NBTTagCompound tag = mobDrops.theEntity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
 
-            if (tag.hasKey(EffectHelper.TAG_XP_BASE)) {
+            if (tag.hasKey(EffectHelper.TAG_XP_BASE, Constants.NBT.TAG_INT)) {
                 mobDrops.xpBase = tag.getInteger(EffectHelper.TAG_XP_BASE);
             }
-            if (tag.hasKey(EffectHelper.TAG_XP_ADD)) {
+            if (tag.hasKey(EffectHelper.TAG_XP_ADD, Constants.NBT.TAG_INT)) {
                 mobDrops.xpAdd = tag.getInteger(EffectHelper.TAG_XP_ADD);
             }
-            if (tag.hasKey(EffectHelper.TAG_XP_MULT)) {
+            if (tag.hasKey(EffectHelper.TAG_XP_MULT, Constants.NBT.TAG_DOUBLE)) {
                 mobDrops.xpMult = tag.getDouble(EffectHelper.TAG_XP_MULT);
             }
         }
@@ -207,23 +208,23 @@ public abstract class EffectHelper {
     // Loads xp data to the entity.
     public static void loadXP(EntityLivingBase entity) {
         if (entity instanceof EntityLiving) {
-            if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE))
+            if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND))
                 return;
             NBTTagCompound tag = entity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
 
-            if (tag.hasKey(EffectHelper.TAG_XP_BASE) || tag.hasKey(EffectHelper.TAG_XP_ADD) || tag.hasKey(EffectHelper.TAG_XP_MULT)) {
+            if (tag.hasKey(EffectHelper.TAG_XP_BASE, Constants.NBT.TAG_INT) || tag.hasKey(EffectHelper.TAG_XP_ADD, Constants.NBT.TAG_INT) || tag.hasKey(EffectHelper.TAG_XP_MULT, Constants.NBT.TAG_DOUBLE)) {
                 String[] fieldNames = { "field_70728_aV", "experienceValue" };
                 int exp;
-                if (tag.hasKey(EffectHelper.TAG_XP_BASE)) {
+                if (tag.hasKey(EffectHelper.TAG_XP_BASE, Constants.NBT.TAG_INT)) {
                     exp = tag.getInteger(EffectHelper.TAG_XP_BASE);
                 }
                 else {
                     exp = ((Integer) ObfuscationReflectionHelper.getPrivateValue(EntityLiving.class, (EntityLiving) entity, fieldNames)).intValue();
                 }
-                if (tag.hasKey(EffectHelper.TAG_XP_ADD)) {
+                if (tag.hasKey(EffectHelper.TAG_XP_ADD, Constants.NBT.TAG_INT)) {
                     exp += tag.getInteger(EffectHelper.TAG_XP_ADD);
                 }
-                if (tag.hasKey(EffectHelper.TAG_XP_MULT)) {
+                if (tag.hasKey(EffectHelper.TAG_XP_MULT, Constants.NBT.TAG_DOUBLE)) {
                     exp = (int) Math.round(exp * tag.getDouble(EffectHelper.TAG_XP_MULT));
                 }
                 if (exp < 0) {
@@ -236,14 +237,14 @@ public abstract class EffectHelper {
 
     // Loads stats data and executes it.
     public static void loadStats(EntityLivingBase entity, boolean preStats) {
-        if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE))
+        if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND))
             return;
         NBTTagCompound tag = entity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
 
         String tagName = preStats ? EffectHelper.TAG_PRE_STATS : EffectHelper.TAG_STATS;
-        if (tag.hasKey(tagName)) {
+        if (tag.hasKey(tagName, Constants.NBT.TAG_LIST)) {
             MobStatsInfo mobStats = new MobStatsInfo(entity);
-            new MobStats(entity.getClass().getName(), tag.getTagList(tagName, new NBTTagString().getId())).init(mobStats);
+            new MobStats(entity.getClass().getName(), tag.getTagList(tagName, Constants.NBT.TAG_STRING)).init(mobStats);
             mobStats.save();
         }
     }
@@ -253,12 +254,12 @@ public abstract class EffectHelper {
         if (mobStats.addDropsList.size() == 0)
             return;
         NBTTagCompound tag = mobStats.theEntity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
-        if (!mobStats.theEntity.getEntityData().hasKey(EffectHelper.TAG_BASE)) {
+        if (!mobStats.theEntity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND)) {
             mobStats.theEntity.getEntityData().setTag(EffectHelper.TAG_BASE, tag);
         }
 
-        NBTTagList dropList = tag.getTagList(EffectHelper.TAG_DROPS, new NBTTagString().getId());
-        if (!tag.hasKey(EffectHelper.TAG_DROPS)) {
+        NBTTagList dropList = tag.getTagList(EffectHelper.TAG_DROPS, Constants.NBT.TAG_STRING);
+        if (!tag.hasKey(EffectHelper.TAG_DROPS, Constants.NBT.TAG_LIST)) {
             tag.setTag(EffectHelper.TAG_DROPS, dropList);
         }
         for (String dropsFunction : mobStats.addDropsList) {
@@ -268,24 +269,24 @@ public abstract class EffectHelper {
 
     // Loads drops data and executes it.
     public static void loadDrops(MobDropsInfo mobDrops) {
-        if (!mobDrops.theEntity.getEntityData().hasKey(EffectHelper.TAG_BASE))
+        if (!mobDrops.theEntity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND))
             return;
         NBTTagCompound tag = mobDrops.theEntity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
 
-        if (tag.hasKey(EffectHelper.TAG_DROPS)) {
-            new MobDrops(mobDrops.theEntity.getClass().getName(), tag.getTagList(EffectHelper.TAG_DROPS, new NBTTagString().getId())).modifyDrops(mobDrops);
+        if (tag.hasKey(EffectHelper.TAG_DROPS, Constants.NBT.TAG_LIST)) {
+            new MobDrops(mobDrops.theEntity.getClass().getName(), tag.getTagList(EffectHelper.TAG_DROPS, Constants.NBT.TAG_STRING)).modifyDrops(mobDrops);
         }
     }
 
     // Loads legacy drops data to the drops list.
     @Deprecated
     public static void loadLegacyDrops(EntityLivingBase entity, ArrayList<EntityItem> drops) {
-        if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE))
+        if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND))
             return;
         NBTTagCompound tag = entity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
 
-        if (tag.hasKey(EffectHelper.TAG_ADD_DROPS)) {
-            NBTTagList dropList = tag.getTagList(EffectHelper.TAG_ADD_DROPS, new NBTTagCompound().getId());
+        if (tag.hasKey(EffectHelper.TAG_ADD_DROPS, Constants.NBT.TAG_LIST)) {
+            NBTTagList dropList = tag.getTagList(EffectHelper.TAG_ADD_DROPS, Constants.NBT.TAG_COMPOUND);
             int length = dropList.tagCount();
             ItemStack itemStack;
             EntityItem drop;
@@ -308,8 +309,8 @@ public abstract class EffectHelper {
                 }
             }
         }
-        if (tag.hasKey(EffectHelper.TAG_SPAWNS)) {
-            NBTTagList spawnList = tag.getTagList(EffectHelper.TAG_SPAWNS, new NBTTagCompound().getId());
+        if (tag.hasKey(EffectHelper.TAG_SPAWNS, Constants.NBT.TAG_LIST)) {
+            NBTTagList spawnList = tag.getTagList(EffectHelper.TAG_SPAWNS, Constants.NBT.TAG_COMPOUND);
             int length = spawnList.tagCount();
             Entity mob;
             for (int i = 0; i < length; i++) {

@@ -76,7 +76,9 @@ public class EntryDropsSpawn extends EntryAbstract {
             entity.rotationYaw = parentEntity.rotationYaw;
         }
         if (entity instanceof EntityLivingBase) {
-            this.entityStats.init(new MobStatsInfo((EntityLivingBase) entity));
+            MobStatsInfo mobStats = new MobStatsInfo((EntityLivingBase) entity);
+            this.entityStats.init(mobStats);
+            mobStats.save();
         }
     }
 }

@@ -14,6 +14,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 public class Schematic {
 
@@ -46,13 +47,13 @@ public class Schematic {
 			this.blocks[i] = Block.getBlockById(blockIds[i] & 0xff);
 		}
 		this.metadata = tag.getByteArray("Data");
-		tagList = tag.getTagList("TileEntities", tag.getId());
+		tagList = tag.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
 		this.tileEntities = new NBTTagCompound[tagList.tagCount()];
 		for (int i = tagList.tagCount(); i-- > 0;) {
 			this.tileEntities[i] = (NBTTagCompound) tagList.getCompoundTagAt(i).copy();
 		}
 
-		tagList = tag.getTagList("Entities", tag.getId());
+		tagList = tag.getTagList("Entities", Constants.NBT.TAG_COMPOUND);
 		this.entities = new NBTTagCompound[tagList.tagCount()];
 		for (int i = tagList.tagCount(); i-- > 0;) {
 			this.entities[i] = (NBTTagCompound) tagList.getCompoundTagAt(i).copy();

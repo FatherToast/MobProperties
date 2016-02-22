@@ -4,6 +4,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagDouble;
 import net.minecraft.nbt.NBTTagFloat;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
 import toast.mobProperties.IPropertyReader;
 import toast.mobProperties.NBTStats;
 import toast.mobProperties.entry.EntryAbstract;
@@ -39,7 +40,7 @@ public class EntryStatsNBT extends EntryAbstract {
         NBTTagCompound tag = new NBTTagCompound();
         mobStats.theEntity.writeToNBT(tag);
 
-        NBTTagList tagList = tag.getTagList("Pos", new NBTTagDouble(0.0).getId());
+        NBTTagList tagList = tag.getTagList("Pos", Constants.NBT.TAG_DOUBLE);
         double x = tagList.func_150309_d(0);
         double y = tagList.func_150309_d(1);
         double z = tagList.func_150309_d(2);
@@ -47,18 +48,18 @@ public class EntryStatsNBT extends EntryAbstract {
         tagList.func_150304_a(1, new NBTTagDouble(0.0));
         tagList.func_150304_a(2, new NBTTagDouble(0.0));
 
-        tagList = tag.getTagList("Rotation", new NBTTagFloat(0.0F).getId());
+        tagList = tag.getTagList("Rotation", Constants.NBT.TAG_FLOAT);
         float yaw = tagList.func_150308_e(0);
         tagList.func_150304_a(0, new NBTTagFloat(0.0F));
 
         this.nbtStats.generate(mobStats.theEntity, tag, mobStats);
 
-        tagList = tag.getTagList("Pos", new NBTTagDouble(0.0).getId());
+        tagList = tag.getTagList("Pos", Constants.NBT.TAG_DOUBLE);
         tagList.func_150304_a(0, new NBTTagDouble(tagList.func_150309_d(0) + x));
         tagList.func_150304_a(1, new NBTTagDouble(tagList.func_150309_d(1) + y));
         tagList.func_150304_a(2, new NBTTagDouble(tagList.func_150309_d(2) + z));
 
-        tagList = tag.getTagList("Rotation", new NBTTagFloat(0.0F).getId());
+        tagList = tag.getTagList("Rotation", Constants.NBT.TAG_FLOAT);
         tagList.func_150304_a(0, new NBTTagFloat(tagList.func_150308_e(0) + yaw));
 
         mobStats.theEntity.readFromNBT(tag);

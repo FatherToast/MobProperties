@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
 
 public class NBTStatsInfo {
     // The mob info this is a part of.
@@ -65,7 +66,7 @@ public class NBTStatsInfo {
     // Called recursively to copy all the NBT tags from a wrapped compound.
     private void writeCompound(NBTTagCompound compound, NBTWrapper wrapper) {
         NBTTagCompound copyTo = compound.getCompoundTag(wrapper.getName());
-        if (!compound.hasKey(wrapper.getName())) {
+        if (!compound.hasKey(wrapper.getName(), Constants.NBT.TAG_COMPOUND)) {
             compound.setTag(wrapper.getName(), copyTo);
         }
 

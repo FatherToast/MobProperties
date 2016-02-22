@@ -10,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntitySkeleton;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -327,18 +328,18 @@ public class PropertyGroupConditional extends PropertyGroup {
             return invert;
         }
 
-        if (category.startsWith("in_biome_")) {
+        if (category.startsWith("in_biome_type_")) {
             try {
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)) == PropertyGroupConditional.getBiome(category.substring(9)) != invert;
+                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).isEqualTo(PropertyGroupConditional.getBiomeType(category.substring(14))) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
             }
             return invert;
         }
-        if (category.startsWith("in_biome_type_")) {
+        if (category.startsWith("in_biome_")) {
             try {
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).isEqualTo(PropertyGroupConditional.getBiomeType(category.substring(14))) != invert;
+                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)) == PropertyGroupConditional.getBiome(category.substring(9)) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -417,7 +418,39 @@ public class PropertyGroupConditional extends PropertyGroup {
             }
             return invert;
         }
-        throw new RuntimeException("[ERROR] Conditional property has invalid condition! for " + entity.getClass().getName());
+        if (category.startsWith("player_count_above_")) {
+            try {
+                return entity.worldObj.playerEntities.size() > Integer.parseInt(category.substring(19)) != invert;
+            }
+            catch (Exception ex) {
+                // Do nothing
+            }
+            return invert;
+        }
+        if (category.startsWith("player_level_above_")) {
+            try {
+            	int level = 0;
+            	for (int i = 0; i < entity.worldObj.playerEntities.size(); i++) {
+            		level += ((EntityPlayer) entity.worldObj.playerEntities.get(i)).experienceLevel;
+            	}
+                return level > Integer.parseInt(category.substring(19)) != invert;
+            }
+            catch (Exception ex) {
+                // Do nothing
+            }
+            return invert;
+        }
+        if (category.startsWith("nearest_player_level_above_")) {
+            try {
+                return entity.worldObj.getClosestPlayerToEntity(entity, -1.0).experienceLevel > Integer.parseInt(category.substring(27)) != invert;
+            }
+            catch (Exception ex) {
+                // Do nothing
+            }
+            return invert;
+        }
+
+        throw new RuntimeException("[ERROR] Conditional property has invalid condition! (" + category + ") for " + entity.getClass().getName());
     }
 
     // Returns a string array with the path end for the left-hand operand, the operator string, and the right-hand operand.

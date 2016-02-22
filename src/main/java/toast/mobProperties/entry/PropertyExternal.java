@@ -124,9 +124,8 @@ public class PropertyExternal extends EntryAbstract implements IPropertyDrops {
                 stats.init(mobStats);
             }
         }
-        else {
-            super.init(mobStats);
-        }
+        else
+			throw new RuntimeException("[ERROR] External stats function \"" + this.externalFunction + ".json\" not found!");
     }
 
     // Modifies the item.
@@ -138,9 +137,8 @@ public class PropertyExternal extends EntryAbstract implements IPropertyDrops {
                 stats.generate(itemStats);
             }
         }
-        else {
-            super.modifyItem(itemStats);
-        }
+        else
+			throw new RuntimeException("[ERROR] External item stats function \"" + this.externalFunction + ".json\" not found!");
     }
 
     // Adds any NBT tags to the list.
@@ -152,9 +150,8 @@ public class PropertyExternal extends EntryAbstract implements IPropertyDrops {
                 stats.generate(nbtStats);
             }
         }
-        else {
-            super.addTags(nbtStats);
-        }
+        else
+			throw new RuntimeException("[ERROR] External nbt function \"" + this.externalFunction + ".json\" not found!");
     }
 
     // Modifies the list of drops.
@@ -166,9 +163,8 @@ public class PropertyExternal extends EntryAbstract implements IPropertyDrops {
                 drops.modifyDrops(mobDrops);
             }
         }
-        else {
-            super.modifyDrops(mobDrops);
-        }
+        else
+			throw new RuntimeException("[ERROR] External drops function \"" + this.externalFunction + ".json\" not found!");
     }
 
     /*
