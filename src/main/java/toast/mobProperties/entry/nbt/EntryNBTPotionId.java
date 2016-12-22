@@ -1,10 +1,11 @@
 package toast.mobProperties.entry.nbt;
 
 import net.minecraft.nbt.NBTTagByte;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
+import net.minecraft.potion.Potion;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.NBTStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 
@@ -17,7 +18,7 @@ public class EntryNBTPotionId extends EntryAbstract {
     public EntryNBTPotionId(String path, JsonObject root, int index, JsonObject node, IPropertyReader loader) {
         super(node, path);
         this.name = FileHelper.readText(node, path, "name", "Id");
-        this.value = (byte) FileHelper.readPotion(node, path, "value").id;
+        this.value = (byte) Potion.getIdFromPotion(FileHelper.readPotion(node, path, "value"));
     }
 
     /// Returns an array of required field names.

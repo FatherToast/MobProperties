@@ -1,7 +1,8 @@
-package toast.mobProperties.entry;
+package toast.mobProperties.event;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
 import net.minecraft.entity.EntityLivingBase;
@@ -9,8 +10,8 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
-import toast.mobProperties.EffectHelper;
-import toast.mobProperties.ItemStats;
+import toast.mobProperties.entry.ItemStats;
+import toast.mobProperties.util.EffectHelper;
 
 public class MobDropsInfo {
     /// The entity currently dropping items.
@@ -20,17 +21,13 @@ public class MobDropsInfo {
     /// The lethal source of damage.
     public final DamageSource theSource;
     /// The list of drops.
-    public final ArrayList<EntityItem> dropsList;
+    public final List<EntityItem> dropsList;
     /// The list of drops to be added.
-    public final ArrayList<EntityItem> addDropsList = new ArrayList<EntityItem>();
+    public final List<EntityItem> addDropsList = new ArrayList<EntityItem>();
     /// The looting level of the attacker.
     public final int looting;
     /// True if the entity was damaged by a player recently.
     public final boolean recentlyHit;
-    /// True if the drop is rare.
-    public final boolean rare;
-    /// True if the drop is deemed super rare.
-    public final boolean superRare;
 
     /// Filter for the original drops. 1=keep all, 0=destroy all, 2=keep equipment only
     public byte defaultBehavior = 1;
@@ -42,21 +39,13 @@ public class MobDropsInfo {
     /// The mob's XP multiplier.
     public double xpMult = 1.0;
 
-    public MobDropsInfo(EntityLivingBase entity, DamageSource source, ArrayList<EntityItem> drops, int lootingLevel, boolean recentHit, int specialDropValue) {
+    public MobDropsInfo(EntityLivingBase entity, DamageSource source, List<EntityItem> drops, int lootingLevel, boolean recentHit) {
         this.theEntity = entity;
         this.random = entity.getRNG();
         this.theSource = source;
         this.dropsList = drops;
         this.looting = lootingLevel;
         this.recentlyHit = recentHit;
-        if (this.recentlyHit) {
-            this.rare = specialDropValue < 5;
-            this.superRare = specialDropValue <= 0;
-        }
-        else {
-            this.rare = false;
-            this.superRare = false;
-        }
         EffectHelper.loadXP(this);
     }
 
@@ -68,7 +57,7 @@ public class MobDropsInfo {
                 EntityItem drop;
                 while (count-- > 0) {
                     drop = new EntityItem(this.theEntity.worldObj, this.theEntity.posX, this.theEntity.posY, this.theEntity.posZ, dropStack.copy());
-                    drop.delayBeforeCanPickup = 10;
+                    drop.setDefaultPickupDelay();
                     this.addDropsList.add(drop);
                 }
             }
@@ -87,7 +76,7 @@ public class MobDropsInfo {
         }
     }
 
-    private int removeDrop(Item item, int damage, int count, boolean infinite, ArrayList<EntityItem> drops) {
+    private int removeDrop(Item item, int damage, int count, boolean infinite, List<EntityItem> drops) {
         EntityItem drop;
         for (Iterator<EntityItem> iterator = drops.iterator(); iterator.hasNext();) {
             drop = iterator.next();

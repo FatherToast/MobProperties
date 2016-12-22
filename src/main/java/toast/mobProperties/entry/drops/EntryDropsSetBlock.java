@@ -1,17 +1,19 @@
 package toast.mobProperties.entry.drops;
 
+import com.google.gson.JsonObject;
+
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.MobPropertyException;
-import toast.mobProperties.NBTStats;
+import net.minecraft.util.math.BlockPos;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.MobDropsInfo;
-
-import com.google.gson.JsonObject;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.entry.NBTStats;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 public class EntryDropsSetBlock extends EntryAbstract {
     // The block id.
@@ -67,21 +69,19 @@ public class EntryDropsSetBlock extends EntryAbstract {
     @Override
     public void modifyDrops(MobDropsInfo mobDrops) {
         if (!mobDrops.theEntity.worldObj.isRemote) {
-            int x = (int) Math.floor(mobDrops.theEntity.posX) + FileHelper.getCount(this.offsetsX);
-            int y = (int) Math.floor(mobDrops.theEntity.posY) + FileHelper.getCount(this.offsetsY);
-            int z = (int) Math.floor(mobDrops.theEntity.posZ) + FileHelper.getCount(this.offsetsZ);
+        	BlockPos pos = new BlockPos(mobDrops.theEntity).add(FileHelper.getCount(this.offsetsX), FileHelper.getCount(this.offsetsY), FileHelper.getCount(this.offsetsZ));
             int data = FileHelper.getCount(this.blockData);
 
             if (this.override != 1) {
-                Block blockReplacing = mobDrops.theEntity.worldObj.getBlock(x, y, z);
-                if (blockReplacing != Blocks.air && (this.override == 0 || !blockReplacing.getMaterial().isReplaceable()))
+                IBlockState blockReplacing = mobDrops.theEntity.worldObj.getBlockState(pos);
+                if (blockReplacing.getBlock() != Blocks.AIR && (this.override == 0 || !blockReplacing.getMaterial().isReplaceable()))
                     return;
             }
 
-            mobDrops.theEntity.worldObj.setBlock(x, y, z, this.block, data, this.update);
+            mobDrops.theEntity.worldObj.setBlockState(pos, this.block.getStateFromMeta(data), this.update);
 
             if (this.nbtStats.hasEntries()) {
-                TileEntity tileEntity = mobDrops.theEntity.worldObj.getTileEntity(x, y, z);
+                TileEntity tileEntity = mobDrops.theEntity.worldObj.getTileEntity(pos);
                 if (tileEntity != null) {
                     NBTTagCompound tag = new NBTTagCompound();
                     tileEntity.writeToNBT(tag);

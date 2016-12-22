@@ -1,15 +1,15 @@
 package toast.mobProperties.entry.stats;
 
-import toast.mobProperties._MobPropertiesMod;
-import toast.mobProperties.EffectHelper;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.MobPropertyException;
-import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
-
 import com.google.gson.JsonObject;
+
+import toast.mobProperties.ModMobProperties;
+import toast.mobProperties.entry.EntryAbstract;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.util.EffectHelper;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 public class EntryStatsModifier extends EntryAbstract {
     /// The attribute name to modify.
@@ -49,7 +49,7 @@ public class EntryStatsModifier extends EntryAbstract {
         double value = FileHelper.getValue(this.values, mobStats.random);
         if (this.override) {
 			if (mobStats.theEntity.getAttributeMap().getAttributeInstanceByName(this.name) == null) {
-				_MobPropertiesMod.debugException("Attempted to override invalid attribute \"" + this.name + "\" for " + mobStats.theEntity.toString());
+				ModMobProperties.logError("Attempted to override invalid attribute \"" + this.name + "\" for " + mobStats.theEntity.toString());
 			}
 			else {
 				mobStats.theEntity.getAttributeMap().getAttributeInstanceByName(this.name).setBaseValue(value);

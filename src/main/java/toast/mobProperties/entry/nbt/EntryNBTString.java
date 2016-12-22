@@ -1,10 +1,10 @@
 package toast.mobProperties.entry.nbt;
 
 import net.minecraft.nbt.NBTTagString;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.NBTStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 

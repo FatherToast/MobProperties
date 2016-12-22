@@ -1,13 +1,13 @@
 package toast.mobProperties.entry.nbt;
 
-import net.minecraft.item.Item;
-import net.minecraft.nbt.NBTTagShort;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.NBTStatsInfo;
-
 import com.google.gson.JsonObject;
+
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.nbt.NBTTagShort;
+import toast.mobProperties.entry.EntryAbstract;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 public class EntryNBTEnchantId extends EntryAbstract {
     /// The name of this tag.
@@ -18,7 +18,7 @@ public class EntryNBTEnchantId extends EntryAbstract {
     public EntryNBTEnchantId(String path, JsonObject root, int index, JsonObject node, IPropertyReader loader) {
         super(node, path);
         this.name = FileHelper.readText(node, path, "name", "id");
-        this.value = (short) FileHelper.readEnchant(node, path, "value").effectId;
+        this.value = (short) Enchantment.getEnchantmentID(FileHelper.readEnchant(node, path, "value"));
     }
 
     /// Returns an array of required field names.

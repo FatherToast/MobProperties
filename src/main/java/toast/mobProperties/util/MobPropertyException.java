@@ -1,4 +1,4 @@
-package toast.mobProperties;
+package toast.mobProperties.util;
 
 public class MobPropertyException extends RuntimeException
 {

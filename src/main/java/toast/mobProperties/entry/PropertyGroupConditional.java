@@ -3,6 +3,8 @@ package toast.mobProperties.entry;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import com.google.gson.JsonObject;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -10,21 +12,26 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntitySkeleton;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.SkeletonType;
+import net.minecraft.entity.monster.ZombieType;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumDifficulty;
-import net.minecraft.world.biome.BiomeGenBase;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties._MobPropertiesMod;
+import net.minecraft.world.biome.Biome;
+import toast.mobProperties.ModMobProperties;
 import toast.mobProperties.api.DropEntry;
-
-import com.google.gson.JsonObject;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 public class PropertyGroupConditional extends PropertyGroup {
     // The method to call for difficulty checks, if found.
@@ -33,7 +40,7 @@ public class PropertyGroupConditional extends PropertyGroup {
     static {
         try {
             PropertyGroupConditional.worldDifficultyMethod = Class.forName("toast.apocalypse.WorldDifficultyManager").getMethod("getWorldDifficulty");
-            _MobPropertiesMod.console("Successfully hooked into Apocalypse's world difficulty!");
+            ModMobProperties.log("Successfully hooked into Apocalypse's world difficulty!");
         }
         catch (Exception ex) {
             // Do nothing
@@ -42,16 +49,12 @@ public class PropertyGroupConditional extends PropertyGroup {
 
     // Returns true if the category can be executed.
     public static boolean isCategoryActive(boolean invert, String category, EntityLivingBase entity) {
-        return PropertyGroupConditional.isCategoryActive(invert, category, entity, null, 0, false, false, false);
+        return PropertyGroupConditional.isCategoryActive(invert, category, entity, null, 0, false);
     }
-    public static boolean isCategoryActive(boolean invert, String category, EntityLivingBase entity, DamageSource source, int looting, boolean recentlyHit, boolean rare, boolean superRare) {
+    public static boolean isCategoryActive(boolean invert, String category, EntityLivingBase entity, DamageSource source, int looting, boolean recentlyHit) {
 		// Drops only
         if (category.equals("recently_hit"))
             return recentlyHit != invert;
-        if (category.equals("rare"))
-            return rare != invert;
-        if (category.equals("rare_super"))
-            return superRare != invert;
         if (category.startsWith("above_looting_")) {
             try {
                 return looting > Integer.parseInt(category.substring(14)) != invert;
@@ -129,7 +132,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         }
         if (category.startsWith("killed_by_")) {
             try {
-                return ((Class) EntityList.stringToClassMapping.get(category.substring(10))).isAssignableFrom(source.getEntity().getClass()) != invert;
+                return EntityList.NAME_TO_CLASS.get(category.substring(10)).isAssignableFrom(source.getEntity().getClass()) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -165,7 +168,7 @@ public class PropertyGroupConditional extends PropertyGroup {
     	}
         if (category.equals("killer_submerged")) {
             try {
-            	return (source.getEntity().isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier((EntityLivingBase) source.getEntity())) != invert;
+            	return (source.getEntity().isInsideOfMaterial(Material.WATER) && !EnchantmentHelper.getAquaAffinityModifier((EntityLivingBase) source.getEntity())) != invert;
             }
 	        catch (Exception ex) {
 	            // Do nothing
@@ -196,7 +199,25 @@ public class PropertyGroupConditional extends PropertyGroup {
         }
         if (category.equals("killer_wither_skeleton")) {
             try {
-            	return ((EntitySkeleton) source.getEntity()).getSkeletonType() == 1 != invert;
+            	return SkeletonType.WITHER.equals(((EntitySkeleton) source.getEntity()).func_189771_df()) != invert;
+            }
+            catch (Exception ex) {
+                // Do nothing
+            }
+            return invert;
+        }
+        if (category.equals("killer_stray_skeleton")) {
+            try {
+            	return SkeletonType.STRAY.equals(((EntitySkeleton) source.getEntity()).func_189771_df()) != invert;
+            }
+            catch (Exception ex) {
+                // Do nothing
+            }
+            return invert;
+        }
+        if (category.equals("killer_husk_zombie")) {
+            try {
+            	return ZombieType.HUSK.equals(((EntityZombie) source.getEntity()).func_189777_di()) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -211,7 +232,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         if (category.equals("wet"))
             return entity.isWet() != invert;
         if (category.equals("submerged"))
-            return (entity.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(entity)) != invert;
+            return (entity.isInsideOfMaterial(Material.WATER) && !EnchantmentHelper.getAquaAffinityModifier(entity)) != invert;
         if (category.startsWith("has_potion_")) {
             try {
                 return entity.isPotionActive(FileHelper.readPotion(category.substring(11), entity.getClass().getName(), true)) != invert;
@@ -236,21 +257,25 @@ public class PropertyGroupConditional extends PropertyGroup {
         }
 
         if (category.equals("wither_skeleton"))
-            return (entity instanceof EntitySkeleton && ((EntitySkeleton) entity).getSkeletonType() == 1) != invert;
+            return (entity instanceof EntitySkeleton && SkeletonType.WITHER.equals(((EntitySkeleton) entity).func_189771_df())) != invert;
+        if (category.equals("stray_skeleton"))
+            return (entity instanceof EntitySkeleton && SkeletonType.STRAY.equals(((EntitySkeleton) entity).func_189771_df())) != invert;
+        if (category.equals("husk_zombie"))
+            return (entity instanceof EntityZombie && ZombieType.HUSK.equals(((EntityZombie) entity).func_189777_di())) != invert;
 
         if (category.equals("raining"))
             return entity.worldObj.isRaining() != invert;
         if (category.equals("thundering"))
             return entity.worldObj.isThundering() != invert;
         if (category.equals("can_see_sky"))
-            return entity.worldObj.canBlockSeeTheSky((int) Math.floor(entity.posX), (int) Math.floor(entity.posY), (int) Math.floor(entity.posZ)) != invert;
+            return entity.worldObj.canBlockSeeSky(new BlockPos(entity)) != invert;
         if (category.startsWith("moon_phase_"))
             return entity.worldObj.provider.getMoonPhase(entity.worldObj.getWorldTime()) == PropertyGroupConditional.getMoonPhaseId(category.substring(11)) != invert;
         if (category.startsWith("beyond_")) {
             try {
                 double distance = Double.parseDouble(category.substring(7));
-                ChunkCoordinates spawnPoint = entity.worldObj.getSpawnPoint();
-                return entity.getDistanceSq(spawnPoint.posX, spawnPoint.posY, spawnPoint.posZ) > distance * distance != invert;
+                BlockPos spawnPoint = entity.worldObj.getSpawnPoint();
+                return entity.getDistanceSq(spawnPoint) > distance * distance != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -258,7 +283,7 @@ public class PropertyGroupConditional extends PropertyGroup {
             return invert;
         }
         if (category.startsWith("difficulty_"))
-            return entity.worldObj.difficultySetting == PropertyGroupConditional.getDifficulty(category.substring(11)) != invert;
+            return entity.worldObj.getDifficulty() == PropertyGroupConditional.getDifficulty(category.substring(11)) != invert;
         if (category.startsWith("past_world_difficulty_")) {
             try {
                 long difficulty = (long) (Double.parseDouble(category.substring(22)) * 24000L);
@@ -293,7 +318,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         if (category.startsWith("in_dimension_")) {
             try {
             	if (entity.worldObj != null)
-            		return entity.worldObj.provider.dimensionId == Integer.parseInt(category.substring(13)) != invert;
+            		return entity.worldObj.provider.getDimension() == Integer.parseInt(category.substring(13)) != invert;
                 return entity.dimension == Integer.parseInt(category.substring(13)) != invert;
             }
             catch (Exception ex) {
@@ -309,7 +334,7 @@ public class PropertyGroupConditional extends PropertyGroup {
                 int yMax = (int) Math.floor(entity.posY) + (int) Math.floor(entity.height);
                 int z = (int) Math.floor(entity.posZ);
                 for (int y = yMin; y <= yMax; y++)
-                    if (entity.worldObj.getBlock(x, y, z) == block != invert)
+                    if (entity.worldObj.getBlockState(new BlockPos(x, y, z)).getBlock() == block != invert)
                         return true;
                 return invert;
             }
@@ -330,7 +355,11 @@ public class PropertyGroupConditional extends PropertyGroup {
 
         if (category.startsWith("in_biome_type_")) {
             try {
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).isEqualTo(PropertyGroupConditional.getBiomeType(category.substring(14))) != invert;
+            	Biome biome = entity.worldObj.getBiomeGenForCoords(new BlockPos(entity));
+            	if (biome.isMutation()) {
+            		biome = Biome.getMutationForBiome(biome);
+            	}
+                return biome.equals(PropertyGroupConditional.getBiome(category.substring(14))) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -339,7 +368,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         }
         if (category.startsWith("in_biome_")) {
             try {
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)) == PropertyGroupConditional.getBiome(category.substring(9)) != invert;
+                return entity.worldObj.getBiomeGenForCoords(new BlockPos(entity)) == PropertyGroupConditional.getBiome(category.substring(9)) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -348,7 +377,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         }
         if (category.startsWith("biome_temp_")) {
             try {
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).getTempCategory() == PropertyGroupConditional.getTempCategory(category.substring(11)) != invert;
+                return entity.worldObj.getBiomeGenForCoords(new BlockPos(entity)).getTempCategory() == PropertyGroupConditional.getTempCategory(category.substring(11)) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -357,7 +386,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         }
         if (category.startsWith("biome_height_below_")) {
             try {
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).rootHeight < PropertyGroupConditional.getBiomeHeight(category.substring(19)) != invert;
+                return entity.worldObj.getBiomeGenForCoords(new BlockPos(entity)).getBaseHeight() < PropertyGroupConditional.getBiomeHeight(category.substring(19)) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -366,7 +395,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         }
         if (category.startsWith("is_humid")) {
             try {
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).isHighHumidity() != invert;
+                return entity.worldObj.getBiomeGenForCoords(new BlockPos(entity)).isHighHumidity() != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -376,7 +405,7 @@ public class PropertyGroupConditional extends PropertyGroup {
         if (category.startsWith("rainfall_above_")) {
             try {
             	// Rainfall benchmarks: 0.0 is no rain, 0.5 is default, >0.85 is considered humid (affects fire), 1.0 is the max set by vanilla
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).rainfall > Float.parseFloat(category.substring(15)) != invert;
+                return entity.worldObj.getBiomeGenForCoords(new BlockPos(entity)).getRainfall() > Float.parseFloat(category.substring(15)) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -387,7 +416,7 @@ public class PropertyGroupConditional extends PropertyGroup {
             try {
             	// Temperature benchmarks: -0.5 is the vanilla min, 0.2 is freezing point, 0.5 is default, 2.0 is the vanilla max
             	// Temmperature ranges: (-0.5) cold (0.1) invalid/cold (0.2) medium (1.0) hot (2.0)
-                return entity.worldObj.getBiomeGenForCoords((int) Math.floor(entity.posX), (int) Math.floor(entity.posZ)).temperature > Float.parseFloat(category.substring(17)) != invert;
+                return entity.worldObj.getBiomeGenForCoords(new BlockPos(entity)).getTemperature() > Float.parseFloat(category.substring(17)) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -399,9 +428,8 @@ public class PropertyGroupConditional extends PropertyGroup {
             	// At or below 64 blocks, the actual temp is the same as the biome temp
             	// For each block above 64, the biome temperature is reduced by 0.0016666...
             	// Everywhere above 64 blocks, the height used to calculate temp reduction is increased by a random number of blocks
-                int x = (int) Math.floor(entity.posX);
-                int z = (int) Math.floor(entity.posZ);
-                return entity.worldObj.getBiomeGenForCoords(x, z).getFloatTemperature(x, (int) Math.floor(entity.posY), z) > Float.parseFloat(category.substring(11)) != invert;
+                BlockPos pos = new BlockPos(entity);
+                return entity.worldObj.getBiomeGenForCoords(pos).getFloatTemperature(pos) > Float.parseFloat(category.substring(11)) != invert;
             }
             catch (Exception ex) {
                 // Do nothing
@@ -431,7 +459,7 @@ public class PropertyGroupConditional extends PropertyGroup {
             try {
             	int level = 0;
             	for (int i = 0; i < entity.worldObj.playerEntities.size(); i++) {
-            		level += ((EntityPlayer) entity.worldObj.playerEntities.get(i)).experienceLevel;
+            		level += entity.worldObj.playerEntities.get(i).experienceLevel;
             	}
                 return level > Integer.parseInt(category.substring(19)) != invert;
             }
@@ -494,20 +522,20 @@ public class PropertyGroupConditional extends PropertyGroup {
 
         // Compare the actual to the value
         if (data[1] == null) // boolean check
-            return tag != null && ((NBTBase.NBTPrimitive) tag).func_150290_f() == 1;
+            return tag != null && ((NBTPrimitive) tag).getInt() == 1;
         double value;
         try {
         	value = Double.parseDouble(data[2]);
         }
         catch (NumberFormatException ex) { // String check
-        	return data[1].equals("==") && data[2].equals(((NBTTagString) tag).func_150285_a_());
+        	return data[1].equals("==") && data[2].equals(((NBTTagString) tag).getString());
         }
         double actual;
         if (tag == null) {
             actual = 0.0;
         }
         else {
-            actual = ((NBTBase.NBTPrimitive) tag).func_150286_g();
+            actual = ((NBTPrimitive) tag).getDouble();
         }
 
         if (data[1].equals("=="))
@@ -568,70 +596,33 @@ public class PropertyGroupConditional extends PropertyGroup {
     }
 
     // Parses a biome from a string.
-    private static BiomeGenBase getBiome(String id) {
-    	for (BiomeGenBase biome : BiomeGenBase.getBiomeGenArray()) {
-    		if (biome.biomeName.equals(id))
-				return biome;
-    	}
-        try {
-        	int biomeId = Integer.parseInt(id);
-        	_MobPropertiesMod.console("[WARNING]  Usage of numerical biome id! (" + id + "=\"" + BiomeGenBase.getBiomeGenArray()[biomeId].biomeName + "\") in conditional check!");
-            return BiomeGenBase.getBiomeGenArray()[biomeId];
-        }
-        catch (Exception ex) {
-            return null;
-        }
-    }
+    private static Biome getBiome(String id) {
+    	Biome biome = Biome.REGISTRY.getObject(new ResourceLocation(id));
 
-    // Parses a biome from a string for use in the more relaxed biome check.
-    private static BiomeGenBase getBiomeType(String id) {
-    	if ("BEACH".equalsIgnoreCase(id))
-			return BiomeGenBase.beach;
-    	if ("DESERT".equalsIgnoreCase(id))
-			return BiomeGenBase.desert;
-    	if ("END".equalsIgnoreCase(id))
-			return BiomeGenBase.sky;
-    	if ("FOREST".equalsIgnoreCase(id))
-			return BiomeGenBase.forest;
-    	if ("HELL".equalsIgnoreCase(id))
-			return BiomeGenBase.hell;
-    	if ("HILLS".equalsIgnoreCase(id))
-			return BiomeGenBase.extremeHills;
-    	if ("JUNGLE".equalsIgnoreCase(id))
-			return BiomeGenBase.jungle;
-    	if ("MESA".equalsIgnoreCase(id))
-			return BiomeGenBase.mesa;
-    	if ("MUSHROOM".equalsIgnoreCase(id))
-			return BiomeGenBase.mushroomIsland;
-    	if ("OCEAN".equalsIgnoreCase(id))
-			return BiomeGenBase.ocean;
-    	if ("PLAINS".equalsIgnoreCase(id))
-			return BiomeGenBase.plains;
-    	if ("RIVER".equalsIgnoreCase(id))
-			return BiomeGenBase.river;
-    	if ("SAVANNA".equalsIgnoreCase(id))
-			return BiomeGenBase.savanna;
-    	if ("SNOW".equalsIgnoreCase(id))
-			return BiomeGenBase.icePlains;
-    	if ("STONE_BEACH".equalsIgnoreCase(id))
-			return BiomeGenBase.stoneBeach;
-    	if ("SWAMP".equalsIgnoreCase(id))
-			return BiomeGenBase.swampland;
-    	if ("TAIGA".equalsIgnoreCase(id))
-			return BiomeGenBase.taiga;
-    	return PropertyGroupConditional.getBiome(id);
+    	if (biome == null) {
+	        try {
+	        	biome = Biome.getBiomeForId(Integer.parseInt(id));
+	        	if (biome != null) {
+	        		ModMobProperties.logWarning("Usage of numerical biome id! (" + id + "=\"" + Biome.REGISTRY.getNameForObject(biome) + "\") in conditional check!");
+	        	}
+	        }
+	        catch (Exception ex) {
+	        	// Do nothing
+	        }
+    	}
+    	return biome;
     }
 
     // Parses the biome temperature category from a string.
-    private static BiomeGenBase.TempCategory getTempCategory(String temp) {
+    private static Biome.TempCategory getTempCategory(String temp) {
     	if ("OCEAN".equalsIgnoreCase(temp))
-			return BiomeGenBase.TempCategory.OCEAN;
+			return Biome.TempCategory.OCEAN;
 		if ("COLD".equalsIgnoreCase(temp))
-			return BiomeGenBase.TempCategory.COLD;
+			return Biome.TempCategory.COLD;
 		if ("MEDIUM".equalsIgnoreCase(temp))
-			return BiomeGenBase.TempCategory.MEDIUM;
+			return Biome.TempCategory.MEDIUM;
 		if ("WARM".equalsIgnoreCase(temp))
-			return BiomeGenBase.TempCategory.WARM;
+			return Biome.TempCategory.WARM;
         return null;
     }
 
@@ -696,7 +687,7 @@ public class PropertyGroupConditional extends PropertyGroup {
     public void modifyItem(ItemStatsInfo itemStats) {
         if (itemStats.parent instanceof MobDropsInfo) {
             MobDropsInfo mobDrops = (MobDropsInfo) itemStats.parent;
-            if (PropertyGroupConditional.isCategoryActive(this.inverted, this.category, mobDrops.theEntity, mobDrops.theSource, mobDrops.looting, mobDrops.recentlyHit, mobDrops.rare, mobDrops.superRare)) {
+            if (PropertyGroupConditional.isCategoryActive(this.inverted, this.category, mobDrops.theEntity, mobDrops.theSource, mobDrops.looting, mobDrops.recentlyHit)) {
                 super.modifyItem(itemStats);
             }
         }
@@ -712,7 +703,7 @@ public class PropertyGroupConditional extends PropertyGroup {
     public void addTags(NBTStatsInfo nbtStats) {
         if (nbtStats.parent instanceof MobDropsInfo) {
             MobDropsInfo mobDrops = (MobDropsInfo) nbtStats.parent;
-            if (PropertyGroupConditional.isCategoryActive(this.inverted, this.category, mobDrops.theEntity, mobDrops.theSource, mobDrops.looting, mobDrops.recentlyHit, mobDrops.rare, mobDrops.superRare)) {
+            if (PropertyGroupConditional.isCategoryActive(this.inverted, this.category, mobDrops.theEntity, mobDrops.theSource, mobDrops.looting, mobDrops.recentlyHit)) {
                 super.addTags(nbtStats);
             }
         }
@@ -726,7 +717,7 @@ public class PropertyGroupConditional extends PropertyGroup {
     // Modifies the list of drops.
     @Override
     public void modifyDrops(MobDropsInfo mobDrops) {
-        if (PropertyGroupConditional.isCategoryActive(this.inverted, this.category, mobDrops.theEntity, mobDrops.theSource, mobDrops.looting, mobDrops.recentlyHit, mobDrops.rare, mobDrops.superRare)) {
+        if (PropertyGroupConditional.isCategoryActive(this.inverted, this.category, mobDrops.theEntity, mobDrops.theSource, mobDrops.looting, mobDrops.recentlyHit)) {
             super.modifyDrops(mobDrops);
         }
     }

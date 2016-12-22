@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.entity.EntityList;
-import toast.mobProperties.MobProperties;
+import toast.mobProperties.entry.MobProperties;
 
 /**
  * The class primarily used to interface with the Mob Properties mod.<br>
@@ -20,7 +20,7 @@ public class MobPropertiesAPI {
      */
     public static List<DropEntry> getDrops(Class entityClass) {
         List<DropEntry> dropsList = new ArrayList<DropEntry>();
-        MobProperties properties = MobProperties.getProperties((String) EntityList.classToStringMapping.get(entityClass));
+        MobProperties properties = MobProperties.getProperties(EntityList.getEntityStringFromClass(entityClass));
         if (properties != null) {
             properties.addDrops(dropsList);
         }

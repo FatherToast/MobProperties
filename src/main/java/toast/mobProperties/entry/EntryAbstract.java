@@ -1,9 +1,12 @@
 package toast.mobProperties.entry;
 
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IProperty;
-
 import com.google.gson.JsonObject;
+
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 public abstract class EntryAbstract implements IProperty {
     // The Json string that makes up this property.

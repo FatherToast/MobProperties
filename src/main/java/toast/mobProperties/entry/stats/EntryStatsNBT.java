@@ -5,11 +5,11 @@ import net.minecraft.nbt.NBTTagDouble;
 import net.minecraft.nbt.NBTTagFloat;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.NBTStats;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.entry.NBTStats;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobStatsInfo;
 
 import com.google.gson.JsonObject;
 
@@ -41,26 +41,26 @@ public class EntryStatsNBT extends EntryAbstract {
         mobStats.theEntity.writeToNBT(tag);
 
         NBTTagList tagList = tag.getTagList("Pos", Constants.NBT.TAG_DOUBLE);
-        double x = tagList.func_150309_d(0);
-        double y = tagList.func_150309_d(1);
-        double z = tagList.func_150309_d(2);
-        tagList.func_150304_a(0, new NBTTagDouble(0.0));
-        tagList.func_150304_a(1, new NBTTagDouble(0.0));
-        tagList.func_150304_a(2, new NBTTagDouble(0.0));
+        double x = tagList.getDoubleAt(0);
+        double y = tagList.getDoubleAt(1);
+        double z = tagList.getDoubleAt(2);
+        tagList.set(0, new NBTTagDouble(0.0));
+        tagList.set(1, new NBTTagDouble(0.0));
+        tagList.set(2, new NBTTagDouble(0.0));
 
         tagList = tag.getTagList("Rotation", Constants.NBT.TAG_FLOAT);
-        float yaw = tagList.func_150308_e(0);
-        tagList.func_150304_a(0, new NBTTagFloat(0.0F));
+        float yaw = tagList.getFloatAt(0);
+        tagList.set(0, new NBTTagFloat(0.0F));
 
         this.nbtStats.generate(mobStats.theEntity, tag, mobStats);
 
         tagList = tag.getTagList("Pos", Constants.NBT.TAG_DOUBLE);
-        tagList.func_150304_a(0, new NBTTagDouble(tagList.func_150309_d(0) + x));
-        tagList.func_150304_a(1, new NBTTagDouble(tagList.func_150309_d(1) + y));
-        tagList.func_150304_a(2, new NBTTagDouble(tagList.func_150309_d(2) + z));
+        tagList.set(0, new NBTTagDouble(tagList.getDoubleAt(0) + x));
+        tagList.set(1, new NBTTagDouble(tagList.getDoubleAt(1) + y));
+        tagList.set(2, new NBTTagDouble(tagList.getDoubleAt(2) + z));
 
         tagList = tag.getTagList("Rotation", Constants.NBT.TAG_FLOAT);
-        tagList.func_150304_a(0, new NBTTagFloat(tagList.func_150308_e(0) + yaw));
+        tagList.set(0, new NBTTagFloat(tagList.getFloatAt(0) + yaw));
 
         mobStats.theEntity.readFromNBT(tag);
     }

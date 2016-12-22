@@ -1,21 +1,18 @@
-package toast.mobProperties;
+package toast.mobProperties.entry;
 
 import net.minecraft.nbt.NBTTagList;
-import toast.mobProperties.entry.EntryCommand;
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.MobDropsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
-import toast.mobProperties.entry.NBTStatsInfo;
-import toast.mobProperties.entry.PropertyChoose;
-import toast.mobProperties.entry.PropertyExternal;
-import toast.mobProperties.entry.PropertyGroup;
-import toast.mobProperties.entry.PropertyGroupConditional;
 import toast.mobProperties.entry.stats.EntryStatsEquip;
 import toast.mobProperties.entry.stats.EntryStatsModifier;
 import toast.mobProperties.entry.stats.EntryStatsNBT;
 import toast.mobProperties.entry.stats.EntryStatsName;
 import toast.mobProperties.entry.stats.EntryStatsPotion;
 import toast.mobProperties.entry.stats.EntryStatsRiding;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

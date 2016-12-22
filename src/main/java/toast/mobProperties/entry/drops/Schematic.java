@@ -1,9 +1,9 @@
 package toast.mobProperties.entry.drops;
 
-import java.util.Collection;
 import java.util.HashSet;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.init.Blocks;
@@ -12,7 +12,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagDouble;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
@@ -78,20 +79,23 @@ public class Schematic {
 		// Place blocks
 		int index;
 		byte override;
-		HashSet<ChunkCoordinates> skipTileEntities = new HashSet<ChunkCoordinates>();
+		HashSet<BlockPos> skipTileEntities = new HashSet<BlockPos>();
+		MutableBlockPos pos = new MutableBlockPos();
+		
 		for (int y0 = 0; y0 < this.ySize; y0++) {
 			for (int z0 = 0; z0 < this.zSize; z0++) {
 				for (int x0 = 0; x0 < this.xSize; x0++) {
 					index = (y0 * this.zSize + z0) * this.xSize + x0;
-					override = this.blocks[index] == Blocks.air ? airOverride : blockOverride;
+					override = this.blocks[index] == Blocks.AIR ? airOverride : blockOverride;
 		            if (override != 1) {
-		                Block blockReplacing = world.getBlock(x + x0, y + y0, z + z0);
-		                if (blockReplacing != Blocks.air && (override == 0 || !blockReplacing.getMaterial().isReplaceable())) {
-		                	skipTileEntities.add(new ChunkCoordinates(x + x0, y + y0, z + z0));
+		            	pos.setPos(x + x0, y + y0, z + z0);
+		                IBlockState blockReplacing = world.getBlockState(pos);
+		                if (blockReplacing != Blocks.AIR && (override == 0 || !blockReplacing.getMaterial().isReplaceable())) {
+		                	skipTileEntities.add(pos.toImmutable());
 							continue;
 						}
 		            }
-					world.setBlock(x + x0, y + y0, z + z0, this.blocks[index], this.metadata[index] & 0xf, update);
+					world.setBlockState(pos, this.blocks[index].getStateFromMeta(this.metadata[index] & 0xf), update);
 				}
 			}
 		}
@@ -109,7 +113,7 @@ public class Schematic {
                     mount = EntityList.createEntityFromNBT(riderTag.getCompoundTag("Riding"), world);
                     if (mount != null) {
                         world.spawnEntityInWorld(mount);
-	                    rider.mountEntity(mount);
+	                    rider.startRiding(mount);
 	                }
 	                rider = mount;
 	            }
@@ -123,8 +127,9 @@ public class Schematic {
             tag.setInteger("x", tag.getInteger("x") + x);
             tag.setInteger("y", tag.getInteger("y") + y);
             tag.setInteger("z", tag.getInteger("z") + z);
-            tileEntity = world.getTileEntity(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
-            if (tileEntity != null && !skipTileEntities.contains(new ChunkCoordinates(tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord))) {
+            pos.setPos(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
+            tileEntity = world.getTileEntity(pos);
+            if (tileEntity != null && !skipTileEntities.contains(tileEntity.getPos())) {
             	tileEntity.readFromNBT(tag);
             }
         }
@@ -133,14 +138,14 @@ public class Schematic {
     /// Creates a deep copy of generic mod data, updates its position to the given coords, and returns the new tag.
     private static NBTTagCompound copyEntityTagRel(NBTTagCompound copyFrom, int x, int y, int z) {
     	NBTTagCompound copyTo = new NBTTagCompound();
-        for (String name : (Collection<String>) copyFrom.func_150296_c()) { // Get tags
+        for (String name : copyFrom.getKeySet()) { // Get tags
             NBTBase tag = copyFrom.getTag(name);
             if (name.equals("Pos")) {
                 NBTTagList posFrom = (NBTTagList) tag;
                 NBTTagList posTo = new NBTTagList();
-                posTo.appendTag(new NBTTagDouble(posFrom.func_150309_d(0) + x)); // get(index)
-                posTo.appendTag(new NBTTagDouble(posFrom.func_150309_d(1) + y));
-                posTo.appendTag(new NBTTagDouble(posFrom.func_150309_d(2) + z));
+                posTo.appendTag(new NBTTagDouble(posFrom.getDoubleAt(0) + x));
+                posTo.appendTag(new NBTTagDouble(posFrom.getDoubleAt(1) + y));
+                posTo.appendTag(new NBTTagDouble(posFrom.getDoubleAt(2) + z));
                 copyTo.setTag(name, posTo);
             }
             else if (name.equals("Riding")) {

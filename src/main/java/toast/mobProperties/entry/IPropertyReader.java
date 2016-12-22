@@ -1,4 +1,4 @@
-package toast.mobProperties;
+package toast.mobProperties.entry;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

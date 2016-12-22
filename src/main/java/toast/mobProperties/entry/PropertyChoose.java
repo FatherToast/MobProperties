@@ -2,18 +2,20 @@ package toast.mobProperties.entry;
 
 import java.util.List;
 
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IProperty;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.MobPropertyException;
-import toast.mobProperties._MobPropertiesMod;
-import toast.mobProperties.api.DropEntry;
-import toast.mobProperties.api.DropsHelper;
-import toast.mobProperties.api.IPropertyDrops;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import toast.mobProperties.ModMobProperties;
+import toast.mobProperties.api.DropEntry;
+import toast.mobProperties.api.DropsHelper;
+import toast.mobProperties.api.IPropertyDrops;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 public class PropertyChoose extends EntryAbstract implements IPropertyDrops {
     /// The min and max number of times to choose an object.
@@ -89,7 +91,7 @@ public class PropertyChoose extends EntryAbstract implements IPropertyDrops {
                     continue choose;
                 }
             }
-            _MobPropertiesMod.debugException("Error choosing weighted item! " + choice + "/" + this.totalWeight);
+            ModMobProperties.logError("Error choosing weighted item! " + choice + "/" + this.totalWeight);
         }
     }
 
@@ -108,7 +110,7 @@ public class PropertyChoose extends EntryAbstract implements IPropertyDrops {
                     continue choose;
                 }
             }
-            _MobPropertiesMod.debugException("Error choosing weighted item! " + choice + "/" + this.totalWeight);
+            ModMobProperties.logError("Error choosing weighted item! " + choice + "/" + this.totalWeight);
         }
     }
 
@@ -127,7 +129,7 @@ public class PropertyChoose extends EntryAbstract implements IPropertyDrops {
                     continue choose;
                 }
             }
-            _MobPropertiesMod.debugException("Error choosing weighted item! " + choice + "/" + this.totalWeight);
+            ModMobProperties.logError("Error choosing weighted item! " + choice + "/" + this.totalWeight);
         }
     }
 
@@ -146,7 +148,7 @@ public class PropertyChoose extends EntryAbstract implements IPropertyDrops {
                     continue choose;
                 }
             }
-            _MobPropertiesMod.debugException("Error choosing weighted item! " + choice + "/" + this.totalWeight);
+            ModMobProperties.logError("Error choosing weighted item! " + choice + "/" + this.totalWeight);
         }
     }
 

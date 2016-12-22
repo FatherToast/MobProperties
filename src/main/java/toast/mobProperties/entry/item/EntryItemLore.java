@@ -1,10 +1,10 @@
 package toast.mobProperties.entry.item;
 
-import toast.mobProperties.EffectHelper;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.ItemStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.util.EffectHelper;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 

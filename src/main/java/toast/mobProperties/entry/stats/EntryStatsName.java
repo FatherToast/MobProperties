@@ -12,12 +12,12 @@ import net.minecraft.item.ItemSpade;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.item.ItemTool;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties._MobPropertiesMod;
+import toast.mobProperties.ModMobProperties;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 
@@ -237,7 +237,13 @@ public class EntryStatsName extends EntryAbstract {
             material = ((ItemTool) itemStack.getItem()).getToolMaterialName();
         }
         if (material != null) {
-            String[][] materials = { { "Wooden", "Wood", "Hardwood", "Balsa Wood", "Mahogany", "Plywood" }, { "Stone", "Rock", "Marble", "Cobblestone", }, { "Iron", "Steel", "Ferrous", "Rusty", "Wrought Iron" }, { "Diamond", "Zircon", "Gemstone", "Jewel", "Crystal" }, { "Golden", "Gold", "Gilt", "Auric", "Ornate" } };
+            String[][] materials = {
+            		{ "Wooden", "Wood", "Hardwood", "Balsa", "Mahogany", "Linden" },
+            		{ "Stone", "Rock", "Lithic", "Marble", "Granite", "Cobblestone", "Basalt", "Diorite" },
+            		{ "Iron", "Steel", "Metal", "Metallic", "Rusty", "Wrought Iron" },
+            		{ "Diamond", "Zircon", "Gemstone", "Jewel", "Crystal" },
+            		{ "Golden", "Gold", "Gilt", "Auric", "Ornate", "Gilded" }
+        		};
             int index = -1;
             if (material.equals(Item.ToolMaterial.WOOD.toString())) {
                 index = 0;
@@ -248,14 +254,14 @@ public class EntryStatsName extends EntryAbstract {
             else if (material.equals(Item.ToolMaterial.IRON.toString())) {
                 index = 2;
             }
-            else if (material.equals(Item.ToolMaterial.EMERALD.toString())) {
+            else if (material.equals(Item.ToolMaterial.DIAMOND.toString())) {
                 index = 3;
             }
             else if (material.equals(Item.ToolMaterial.GOLD.toString())) {
                 index = 4;
             }
             if (index < 0) {
-                name += _MobPropertiesMod.cap(material.toLowerCase()) + " ";
+                name += ModMobProperties.cap(material.toLowerCase()) + " ";
             }
             else {
                 name += materials[index][random.nextInt(materials[index].length)] + " ";
@@ -281,10 +287,16 @@ public class EntryStatsName extends EntryAbstract {
             name += type[random.nextInt(type.length)];
         }
         else if (itemStack.getItem() instanceof ItemArmor) {
-            String[][] materials = { { "Leather", "Rawhide", "Lamellar", "Cow Skin" }, { "Chainmail", "Chain", "Chain Link", "Scale" }, { "Iron", "Steel", "Ferrous", "Rusty", "Wrought Iron" }, { "Diamond", "Zircon", "Gemstone", "Jewel", "Crystal" }, { "Golden", "Gold", "Gilt", "Auric", "Ornate" } };
+            String[][] materials = {
+            		{ "Leather", "Rawhide", "Lamellar", "Cow Skin" },
+            		{ "Chainmail", "Chain", "Chain Link", "Scale" },
+            		{ "Iron", "Steel", "Metal", "Rusty", "Wrought Iron" },
+            		{ "Diamond", "Zircon", "Gemstone", "Jewel", "Crystal" },
+            		{ "Golden", "Gold", "Gilt", "Auric", "Ornate", "Gilded" }
+        		};
             material = ((ItemArmor) itemStack.getItem()).getArmorMaterial().toString();
             int index = -1;
-            if (material.equals(ItemArmor.ArmorMaterial.CLOTH.toString())) {
+            if (material.equals(ItemArmor.ArmorMaterial.LEATHER.toString())) {
                 index = 0;
             }
             else if (material.equals(ItemArmor.ArmorMaterial.CHAIN.toString())) {
@@ -300,7 +312,7 @@ public class EntryStatsName extends EntryAbstract {
                 index = 4;
             }
             if (index < 0) {
-                name += _MobPropertiesMod.cap(material.toLowerCase()) + " ";
+                name += ModMobProperties.cap(material.toLowerCase()) + " ";
             }
             else {
                 name += materials[index][random.nextInt(materials[index].length)] + " ";
@@ -308,18 +320,19 @@ public class EntryStatsName extends EntryAbstract {
 
             String[] type = { "Armor" };
             switch ( ((ItemArmor) itemStack.getItem()).armorType) {
-                case 0:
+                case HEAD:
                     type = new String[] { "Helmet", "Cap", "Crown", "Great Helm", "Bassinet", "Sallet", "Close Helm", "Barbute" };
                     break;
-                case 1:
+                case CHEST:
                     type = new String[] { "Chestplate", "Tunic", "Brigandine", "Hauberk", "Cuirass" };
                     break;
-                case 2:
+                case LEGS:
                     type = new String[] { "Leggings", "Pants", "Tassets", "Cuisses", "Schynbalds" };
                     break;
-                case 3:
+                case FEET:
                     type = new String[] { "Boots", "Shoes", "Greaves", "Sabatons", "Sollerets" };
                     break;
+				default:
             }
             name += type[random.nextInt(type.length)];
         }

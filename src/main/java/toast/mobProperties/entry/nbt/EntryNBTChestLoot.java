@@ -2,42 +2,42 @@ package toast.mobProperties.entry.nbt;
 
 import java.util.Random;
 
+import com.google.gson.JsonObject;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.WeightedRandomChestContent;
-import net.minecraftforge.common.ChestGenHooks;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.storage.loot.LootContext;
+import net.minecraft.world.storage.loot.LootTable;
+import net.minecraft.world.storage.loot.LootTableList;
+import toast.mobProperties.ModMobProperties;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.NBTStatsInfo;
-
-import com.google.gson.JsonObject;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 public class EntryNBTChestLoot extends EntryAbstract {
-    // The name of the chest loot list in GhestGenHooks.
-    private final String lootList;
+    // The name of the chest loot list.
+	private final ResourceLocation loot;
     // The size of the chest's inventory.
     private final int inventorySize;
     // The name to give the inventory list.
     private final String name;
-    // The min and max number of items to generate if used. Otherwise, this is null.
-    private final double[] counts;
 
     public EntryNBTChestLoot(String path, JsonObject root, int index, JsonObject node, IPropertyReader loader) {
         super(node, path);
         this.name = FileHelper.readText(node, path, "name", "Items");
-        this.lootList = FileHelper.readText(node, path, "loot", "dungeonChest");
+        this.loot = new ResourceLocation(FileHelper.readText(node, path, "loot", LootTableList.CHESTS_SIMPLE_DUNGEON.toString()));
         this.inventorySize = FileHelper.readInteger(node, path, "inventory_size", 27);
 
-        double[] countsTmp = FileHelper.readCounts(node, path, "count", -1.0, -1.0);
-        if (countsTmp[0] < 0.0 || countsTmp[1] < 0.0) {
-            this.counts = null;
-        }
-        else {
-            this.counts = countsTmp;
+        if (node.has("count")) {
+            ModMobProperties.logWarning("Chest loot \"count\" is now determined in the loot table (field is ignored) at " + path);
         }
     }
 
@@ -56,28 +56,26 @@ public class EntryNBTChestLoot extends EntryAbstract {
     // Adds any NBT tags to the list.
     @Override
     public void addTags(NBTStatsInfo nbtStats) {
-        InventoryChestLoot chestProxy = new InventoryChestLoot(this.inventorySize);
-        ChestGenHooks info = ChestGenHooks.getInfo(this.lootList);
-        Random rand = nbtStats.theEntity.getRNG();
+    	if (nbtStats.theEntity.worldObj instanceof WorldServer) {
+    		WorldServer world = (WorldServer) nbtStats.theEntity.worldObj;
+	        Random random = nbtStats.theEntity.getRNG();
+	        InventoryNBTChestLoot chestProxy = new InventoryNBTChestLoot(this.inventorySize);
 
-        int count;
-        if (this.counts == null) {
-            count = info.getCount(rand);
-        }
-        else {
-            count = FileHelper.getCount(this.counts);
-        }
+	        LootTable lootTable = nbtStats.theEntity.worldObj.getLootTableManager().getLootTableFromLocation(this.loot);
 
-        WeightedRandomChestContent.generateChestContents(rand, info.getItems(rand), chestProxy, count);
-        nbtStats.addTag(this.name, chestProxy.writeToNBT());
+	        LootContext.Builder lootBuilder = new LootContext.Builder(world);
+
+	        lootTable.fillInventory(chestProxy, random, lootBuilder.build());
+	        nbtStats.addTag(this.name, chestProxy.writeToNBT());
+    	}
     }
 
     // A partly functional proxy inventory to generate chest loot in.
-    private static class InventoryChestLoot implements IInventory {
+    private static class InventoryNBTChestLoot implements IInventory {
         // The proxy's inventory.
         private ItemStack[] inventory;
 
-        public InventoryChestLoot(int inventorySize) {
+        public InventoryNBTChestLoot(int inventorySize) {
             this.inventory = new ItemStack[inventorySize];
         }
 
@@ -113,55 +111,42 @@ public class EntryNBTChestLoot extends EntryAbstract {
             }
         }
 
-        @Override
-        public ItemStack decrStackSize(int slot, int count) {
-            return null;
-        }
-
-        @Override
-        public ItemStack getStackInSlotOnClosing(int slot) {
-            return null;
-        }
-
-        @Override
-        public String getInventoryName() {
-            return "Chest";
-        }
-
-        @Override
-        public boolean hasCustomInventoryName() {
-            return false;
-        }
-
+		@Override
+		public String getName() {
+			return "Chest";
+		}
+		@Override
+		public ITextComponent getDisplayName() {
+			return new TextComponentString(this.getName());
+		}
         @Override
         public int getInventoryStackLimit() {
             return 64;
         }
 
         @Override
-        public void markDirty() {
-            // Do nothing
-        }
-
+        public ItemStack decrStackSize(int slot, int count) { return null; }
+		@Override
+		public void clear() { }
         @Override
-        public boolean isUseableByPlayer(EntityPlayer player) {
-            return false;
-        }
-
+        public void markDirty() { }
         @Override
-        public void openInventory() {
-            // Do nothing
-
-        }
-
+        public boolean isUseableByPlayer(EntityPlayer player) { return false; }
         @Override
-        public void closeInventory() {
-            // Do nothing
-        }
-
-        @Override
-        public boolean isItemValidForSlot(int slot, ItemStack itemStack) {
-            return true;
-        }
+        public boolean isItemValidForSlot(int slot, ItemStack itemStack) { return true; }
+		@Override
+		public boolean hasCustomName() { return false; }
+		@Override
+		public ItemStack removeStackFromSlot(int index) { return null; }
+		@Override
+		public void openInventory(EntityPlayer player) { }
+		@Override
+		public void closeInventory(EntityPlayer player) { }
+		@Override
+		public int getField(int id) { return 0; }
+		@Override
+		public void setField(int id, int value) { }
+		@Override
+		public int getFieldCount() { return 0; }
     }
 }

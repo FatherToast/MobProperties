@@ -1,4 +1,4 @@
-package toast.mobProperties;
+package toast.mobProperties.util;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -10,18 +10,29 @@ import java.io.FilenameFilter;
 import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+
 import net.minecraft.block.Block;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
@@ -37,16 +48,12 @@ import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.nbt.NBTTagShort;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.potion.Potion;
+import net.minecraft.util.ResourceLocation;
+import toast.mobProperties.ModMobProperties;
+import toast.mobProperties.entry.IProperty;
+import toast.mobProperties.entry.MobProperties;
 import toast.mobProperties.entry.PropertyExternal;
 import toast.mobProperties.entry.drops.EntryDropsSchematic;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 public abstract class FileHelper {
     // The directory for config files.
@@ -105,7 +112,7 @@ public abstract class FileHelper {
                         break;
                     }
                 if (attempt > 999) {
-                    _MobPropertiesMod.console("[WARNING] Too many similar files for \"" + entityName + "\"! Cancelled external nbt function generator.");
+                    ModMobProperties.logWarning("Too many similar files for \"" + entityName + "\"! Cancelled external nbt function generator.");
                     return null;
                 }
                 fileName += attempt;
@@ -124,7 +131,7 @@ public abstract class FileHelper {
             return propFile;
         }
         catch (Exception ex) {
-            _MobPropertiesMod.console("[WARNING] Failed to generate external nbt function for \"" + entityName + "\": " + tag.toString());
+            ModMobProperties.logWarning("Failed to generate external nbt function for \"" + entityName + "\": " + tag.toString());
             ex.printStackTrace();
         }
         return null;
@@ -132,7 +139,7 @@ public abstract class FileHelper {
     // Recursively turns an nbt tag compound into an array of Json function objects.
     private static JsonArray tagsToJsonArray(NBTTagCompound compound) {
     	JsonArray array = new JsonArray();
-        for (String name : (Collection<String>) compound.func_150296_c()) { // Gets all used names
+        for (String name : compound.getKeySet()) {
         	array.add(FileHelper.tagToJson(name, compound.getTag(name), compound));
         }
         return array;
@@ -141,7 +148,7 @@ public abstract class FileHelper {
     private static JsonArray tagsToJsonArray(NBTTagList list) {
     	// Makes a temp copy to avoid clearing the original, as now the only
     	// way to get a list's NBTBase objects is by removing them
-    	NBTTagList listCopy = (NBTTagList) list.copy();
+    	NBTTagList listCopy = list.copy();
     	JsonArray array = new JsonArray();
         while (listCopy.tagCount() > 0) {
         	array.add(FileHelper.tagToJson(null, listCopy.removeTag(0), null));
@@ -168,16 +175,16 @@ public abstract class FileHelper {
         // Nbt primitives
         else if (NBTTagString.class.equals(tagClass)) {
         	json.addProperty("function", "string");
-        	json.addProperty("value", ((NBTTagString) tag).func_150285_a_());
+        	json.addProperty("value", ((NBTTagString) tag).getString());
         }
         else if (NBTTagByte.class.equals(tagClass)) {
 	        // Check if it is potentially a potion id
 			try {
 	            if (parent != null && "Id".equals(name)) {
-	            	Collection<String> parentNames = parent.func_150296_c();
+	            	Set<String> parentNames = parent.getKeySet();
 	            	if (parentNames.size() == 4 && parentNames.contains("Amplifier") && parentNames.contains("Duration") && parentNames.contains("Ambient")) {
 	    	        	json.addProperty("function", "potion_id");
-	    	        	String value = Potion.potionTypes[((NBTTagByte) tag).func_150290_f()].getName();
+	    	        	String value = Potion.REGISTRY.getNameForObject(Potion.getPotionById(((NBTTagByte) tag).getByte())).toString();
 	    	        	json.addProperty("value", value);
 	            		return json;
 	            	}
@@ -189,14 +196,14 @@ public abstract class FileHelper {
 
 			// Standard byte
         	json.addProperty("function", "byte");
-        	String value = Byte.toString(((NBTTagByte) tag).func_150290_f());
+        	String value = Byte.toString(((NBTTagByte) tag).getByte());
         	json.addProperty("value", value + "~" + value);
         }
         else if (NBTTagByteArray.class.equals(tagClass)) {
         	json.addProperty("function", "byte_array");
         	JsonArray value = new JsonArray();
         	String subVal;
-        	for (byte entry : ((NBTTagByteArray) tag).func_150292_c()) {
+        	for (byte entry : ((NBTTagByteArray) tag).getByteArray()) {
         		subVal = Byte.toString(entry);
         		value.add(new JsonPrimitive(subVal + "~" + subVal));
         	}
@@ -206,16 +213,16 @@ public abstract class FileHelper {
             // Check if it is potentially an item or enchant id
     		try {
 	            if (parent != null && "id".equals(name)) {
-	            	Collection<String> parentNames = parent.func_150296_c();
+	            	Set<String> parentNames = parent.getKeySet();
 	            	if (parentNames.size() == 2 && parentNames.contains("lvl")) {
 	    	        	json.addProperty("function", "enchant_id");
-	    	        	String value = Enchantment.enchantmentsList[((NBTTagShort) tag).func_150289_e()].getName();
+	    	        	String value = Enchantment.REGISTRY.getNameForObject(Enchantment.getEnchantmentByID(((NBTTagShort) tag).getShort())).toString();
 	    	        	json.addProperty("value", value);
 	            		return json;
 	            	}
 	            	else if (parentNames.contains("Count") && parentNames.contains("Damage")) {
 	    	        	json.addProperty("function", "item_id");
-	    	        	String value = Item.itemRegistry.getNameForObject(Item.getItemById(((NBTTagShort) tag).func_150289_e()));
+	    	        	String value = Item.REGISTRY.getNameForObject(Item.getItemById(((NBTTagShort) tag).getShort())).toString();
 	    	        	json.addProperty("value", value);
 	            		return json;
 	            	}
@@ -227,19 +234,19 @@ public abstract class FileHelper {
 
     		// Standard short
         	json.addProperty("function", "short");
-        	String value = Short.toString(((NBTTagShort) tag).func_150289_e());
+        	String value = Short.toString(((NBTTagShort) tag).getShort());
         	json.addProperty("value", value + "~" + value);
         }
         else if (NBTTagInt.class.equals(tagClass)) {
         	json.addProperty("function", "int");
-        	String value = Integer.toString(((NBTTagInt) tag).func_150287_d());
+        	String value = Integer.toString(((NBTTagInt) tag).getInt());
         	json.addProperty("value", value + "~" + value);
         }
         else if (NBTTagIntArray.class.equals(tagClass)) {
         	json.addProperty("function", "int_array");
         	JsonArray value = new JsonArray();
         	String subVal;
-        	for (int entry : ((NBTTagIntArray) tag).func_150302_c()) {
+        	for (int entry : ((NBTTagIntArray) tag).getIntArray()) {
         		subVal = Integer.toString(entry);
         		value.add(new JsonPrimitive(subVal + "~" + subVal));
         	}
@@ -247,17 +254,17 @@ public abstract class FileHelper {
         }
         else if (NBTTagLong.class.equals(tagClass)) {
         	json.addProperty("function", "long");
-        	String value = Long.toString(((NBTTagLong) tag).func_150291_c());
+        	String value = Long.toString(((NBTTagLong) tag).getLong());
         	json.addProperty("value", value);
         }
         else if (NBTTagFloat.class.equals(tagClass)) {
         	json.addProperty("function", "float");
-        	String value = Float.toString(((NBTTagFloat) tag).func_150288_h());
+        	String value = Float.toString(((NBTTagFloat) tag).getFloat());
         	json.addProperty("value", value + "~" + value);
         }
         else if (NBTTagDouble.class.equals(tagClass)) {
         	json.addProperty("function", "double");
-        	String value = Double.toString(((NBTTagDouble) tag).func_150286_g());
+        	String value = Double.toString(((NBTTagDouble) tag).getDouble());
         	json.addProperty("value", value + "~" + value);
         }
         // Special cases will have already returned
@@ -388,7 +395,7 @@ public abstract class FileHelper {
                 filesGenerated++;
             }
             catch (Exception ex) {
-                _MobPropertiesMod.console("[WARNING] Failed to generate the default properties file!");
+                ModMobProperties.logWarning("Failed to generate the default properties file!");
             }
         }
         else {
@@ -399,11 +406,15 @@ public abstract class FileHelper {
         String fileName;
         File directory, propFile;
         JsonObject props;
-        for (Map.Entry<String, Class> mobEntry : ((Map<String, Class>) EntityList.stringToClassMapping).entrySet()) {
+        for (Entry<String, Class<? extends Entity>> mobEntry : EntityList.NAME_TO_CLASS.entrySet()) {
             if (MobProperties.getProperties(mobEntry.getKey()) == null && EntityLivingBase.class.isAssignableFrom(mobEntry.getValue()) && !Modifier.isAbstract(mobEntry.getValue().getModifiers())) {
                 directory = FileHelper.PROPS_DIRECTORY;
                 fileName = mobEntry.getKey();
                 String[] split = fileName.split("\\.", 2);
+                if (mobEntry.getValue().getName().startsWith("net.minecraft.")) {
+                	if (split.length > 1) split[0] = split[0] + "." + split[1]; // Just in case a vanilla id has a "."
+                	split = new String[] { "minecraft", split[0] };
+                }
                 if (split.length > 1) {
                     fileName = split[1];
                     char[] dirNameArray = split[0].toCharArray();
@@ -428,7 +439,7 @@ public abstract class FileHelper {
                                 break;
                             }
                         if (attempt > 99) {
-                            _MobPropertiesMod.console("[WARNING] Failed to generate default properties file for \"" + mobEntry.getKey() + "\"!");
+                            ModMobProperties.logWarning("Failed to generate default properties file for \"" + mobEntry.getKey() + "\"!");
                             continue;
                         }
                         fileName += attempt;
@@ -451,7 +462,7 @@ public abstract class FileHelper {
                     throw ex;
                 }
                 catch (Exception ex) {
-                    _MobPropertiesMod.console("[WARNING] Failed to generate default properties file for \"" + mobEntry.getKey() + "\"!");
+                    ModMobProperties.logWarning("Failed to generate default properties file for \"" + mobEntry.getKey() + "\"!");
                     ex.printStackTrace();
                 }
             }
@@ -529,7 +540,7 @@ public abstract class FileHelper {
 
     // Returns a randomized double within the values' range.
     public static double getValue(double[] values) {
-        return FileHelper.getCount(values, _MobPropertiesMod.random);
+        return FileHelper.getCount(values, ModMobProperties.random);
     }
     public static double getValue(double[] values, Random random) {
         if (values[0] == values[1])
@@ -539,7 +550,7 @@ public abstract class FileHelper {
 
     // Returns a randomized integer within the counts' range.
     public static int getCount(double[] counts) {
-        return FileHelper.getCount(counts, _MobPropertiesMod.random);
+        return FileHelper.getCount(counts, ModMobProperties.random);
     }
     public static int getCount(double[] counts, Random random) {
         double count = FileHelper.getValue(counts, random);
@@ -553,7 +564,7 @@ public abstract class FileHelper {
 
     // Returns a randomized long within the counts' range.
     public static long getLongCount(double[] counts) {
-        return FileHelper.getLongCount(counts, _MobPropertiesMod.random);
+        return FileHelper.getLongCount(counts, ModMobProperties.random);
     }
     public static long getLongCount(double[] counts, Random random) {
         double count = FileHelper.getValue(counts, random);
@@ -711,6 +722,48 @@ public abstract class FileHelper {
         }
     }
 
+    // Reads the line and optionally throws an exception if it does not represent a valid equipment slot.
+    public static EntityEquipmentSlot readSlot(JsonObject node, String path, String tag, boolean required) {
+        return FileHelper.readSlot(FileHelper.readText(node, path, tag, ""), path, required);
+    }
+    // Reads the text and optionally throws an exception if it does not represent a valid equipment slot.
+    public static EntityEquipmentSlot readSlot(String id, String path, boolean required) {
+    	EntityEquipmentSlot slot = null;
+    	try {
+    		slot = EntityEquipmentSlot.fromString(id.toLowerCase());
+
+    		// Legacy ids
+    		if (slot == null) {
+    			int index = Integer.parseInt(id);
+    	    	for (EntityEquipmentSlot slotType : EntityEquipmentSlot.values()) {
+    	    		if (index == slotType.getSlotIndex()) {
+    	    			slot = slotType;
+    	    			break;
+    	    		}
+    	    	}
+    	    	if (slot != null) {
+                    ModMobProperties.logWarning("Usage of numerical slot id! (" + id + "=\"" + slot.getName() + "\") at " + path);
+                }
+    		}
+    	}
+    	catch (Exception ex) {
+    		// Do nothing
+    	}
+
+        if (required && slot == null) {
+        	if (id.length() > 0) {
+        		String helpText = "";
+    	    	for (EntityEquipmentSlot slotType : EntityEquipmentSlot.values()) {
+    	    		helpText = helpText + ", \"" + slotType.getName() + "\"";
+    	    	}
+    	    	helpText = helpText.substring(2);
+        		ModMobProperties.log("[INFO] Valid slot ids: " + helpText);
+        	}
+            throw new MobPropertyException("Missing or invalid slot! (" + id + ")", path);
+        }
+        return slot;
+    }
+
     // Reads the line and throws an exception if it does not represent a valid item.
     public static Item readItem(JsonObject node, String path, String tag) {
         return FileHelper.readItem(node, path, tag, true);
@@ -721,14 +774,14 @@ public abstract class FileHelper {
     }
     // Reads the text and optionally throws an exception if it does not represent a valid item.
     public static Item readItem(String id, String path, boolean required) {
-        Item item = (Item) Item.itemRegistry.getObject(id);
+        Item item = Item.REGISTRY.getObject(new ResourceLocation(id));
 
-        // Compatibility with old numerical ids.
+        // Legacy ids
         if (item == null) {
             try {
                 item = Item.getItemById(Integer.parseInt(id));
                 if (item != null) {
-                    _MobPropertiesMod.console("[WARNING] Usage of numerical item id! (" + id + "=\"" + Item.itemRegistry.getNameForObject(item) + "\") at " + path);
+                    ModMobProperties.logWarning("Usage of numerical item id! (" + id + "=\"" + Item.REGISTRY.getNameForObject(item) + "\") at " + path);
                 }
             }
             catch (NumberFormatException ex) {
@@ -752,21 +805,23 @@ public abstract class FileHelper {
     // Reads the text and optionally throws an exception if it does not represent a valid block.
     public static Block readBlock(String id, String path, boolean required) {
     	if (id.equals("air") || id.equals("minecraft:air"))
-    		return Blocks.air;
+    		return Blocks.AIR;
+        Block block = Block.REGISTRY.getObject(new ResourceLocation(id));
 
-        Block block = (Block) Block.blockRegistry.getObject(id);
-        if (block == null || block == Blocks.air) {
+        // Legacy ids
+        if (block == null || block == Blocks.AIR) {
             try {
                 block = Block.getBlockById(Integer.parseInt(id));
-                if (block != null && block != Blocks.air) {
-                    _MobPropertiesMod.console("[WARNING] Usage of numerical block id! (" + id + "=\"" + Block.blockRegistry.getNameForObject(block) + "\") at " + path);
+                if (block != null && block != Blocks.AIR) {
+                    ModMobProperties.logWarning("Usage of numerical block id! (" + id + "=\"" + Block.REGISTRY.getNameForObject(block) + "\") at " + path);
                 }
             }
             catch (NumberFormatException ex) {
                 // Do nothing
             }
         }
-        if (required && (block == null || block == Blocks.air))
+
+        if (required && (block == null || block == Blocks.AIR))
             throw new MobPropertyException("Missing or invalid block! (" + id + ")", path);
         return block;
     }
@@ -781,18 +836,14 @@ public abstract class FileHelper {
     }
     // Reads the text and optionally throws an exception if it does not represent a valid potion.
     public static Potion readPotion(String id, String path, boolean required) {
-        Potion potion = null;
-    	for (Potion potionType : Potion.potionTypes) {
-    		if (potionType != null && id.equals(potionType.getName())) {
-    			potion = potionType;
-    			break;
-    		}
-    	}
+        Potion potion = Potion.getPotionFromResourceLocation(id);
+
+    	// Legacy ids
     	if (potion == null) {
     		try {
-    			potion = Potion.potionTypes[Integer.parseInt(id)];
+    			potion = Potion.getPotionById(Integer.parseInt(id));
                 if (potion != null) {
-                    _MobPropertiesMod.console("[WARNING] Usage of numerical potion id! (" + id + "=\"" + potion.getName() + "\") at " + path);
+                    ModMobProperties.logWarning("Usage of numerical potion id! (" + id + "=\"" + Potion.REGISTRY.getNameForObject(potion) + "\") at " + path);
                 }
             }
             catch (ArrayIndexOutOfBoundsException ex) {
@@ -802,6 +853,21 @@ public abstract class FileHelper {
                 // Do nothing
             }
     	}
+    	if (potion == null) {
+    		String idCmp = id.startsWith("potion.") ? "effect" + id.substring("potion".length()) : id;
+
+	    	for (Iterator<Potion> itr = Potion.REGISTRY.iterator(); itr.hasNext();) {
+	    		Potion potionType = itr.next();
+	    		if (potionType != null && idCmp.equals(potionType.getName())) {
+	    			potion = potionType;
+	    			break;
+	    		}
+	    	}
+            if (potion != null) {
+                ModMobProperties.logWarning("Usage of lang key potion id! (\"" + id + "\"=\"" + Potion.REGISTRY.getNameForObject(potion) + "\") at " + path);
+            }
+    	}
+
         if (required && potion == null)
 			throw new MobPropertyException("Missing or invalid potion! (" + id + ")", path);
         return potion;
@@ -817,18 +883,14 @@ public abstract class FileHelper {
     }
     // Reads the text and optionally throws an exception if it does not represent a valid enchantment.
     public static Enchantment readEnchant(String id, String path, boolean required) {
-    	Enchantment enchant = null;
-    	for (Enchantment enchantType : Enchantment.enchantmentsList) {
-    		if (enchantType != null && id.equals(enchantType.getName())) {
-    			enchant = enchantType;
-    			break;
-    		}
-    	}
+    	Enchantment enchant = Enchantment.getEnchantmentByLocation(id);
+
+    	// Legacy ids
     	if (enchant == null) {
     		try {
-    			enchant = Enchantment.enchantmentsList[Integer.parseInt(id)];
+    			enchant = Enchantment.getEnchantmentByID(Integer.parseInt(id));
                 if (enchant != null) {
-                    _MobPropertiesMod.console("[WARNING] Usage of numerical enchantment id! (" + id + "=\"" + enchant.getName() + "\") at " + path);
+                    ModMobProperties.logWarning("Usage of numerical enchantment id! (" + id + "=\"" + Enchantment.REGISTRY.getNameForObject(enchant) + "\") at " + path);
                 }
             }
             catch (ArrayIndexOutOfBoundsException ex) {
@@ -838,6 +900,19 @@ public abstract class FileHelper {
                 // Do nothing
             }
     	}
+    	if (enchant == null) {
+	    	for (Iterator<Enchantment> itr = Enchantment.REGISTRY.iterator(); itr.hasNext();) {
+	    		Enchantment enchantType = itr.next();
+	    		if (enchantType != null && id.equals(enchantType.getName())) {
+	    			enchant = enchantType;
+	    			break;
+	    		}
+	    	}
+            if (enchant != null) {
+                ModMobProperties.logWarning("Usage of lang key enchantment id! (\"" + id + "\"=\"" + Enchantment.REGISTRY.getNameForObject(enchant) + "\") at " + path);
+            }
+    	}
+
         if (required && enchant == null)
 			throw new MobPropertyException("Missing or invalid enchantment! (" + id + ")", path);
         return enchant;

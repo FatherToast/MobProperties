@@ -1,7 +1,7 @@
-package toast.mobProperties;
+package toast.mobProperties.util;
 
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -16,10 +16,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.potion.Potion;
 import net.minecraftforge.common.util.Constants;
-import toast.mobProperties.entry.MobDropsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import toast.mobProperties.ModMobProperties;
+import toast.mobProperties.entry.MobDrops;
+import toast.mobProperties.entry.MobStats;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
 
 public abstract class EffectHelper {
     // The NBT tags used by this mod.
@@ -41,59 +45,49 @@ public abstract class EffectHelper {
     @Deprecated
     private static final String TAG_SPAWNS = "ent";
 
-    /// Applies the enchantment to the itemStack at the given level. Called by all other enchantItem methods to do the actual enchanting.
-    public static void enchantItem(ItemStack itemStack, int id, int level) {
-        if (Enchantment.enchantmentsList[id] != null) {
-            itemStack.addEnchantment(Enchantment.enchantmentsList[id], level);
+    // Applies the enchantment to the itemStack at the given level. Called by all other enchantItem methods to do the actual enchanting.
+    public static void enchantItem(ItemStack itemStack, Enchantment enchant, int level) {
+        if (enchant != null) {
+            itemStack.addEnchantment(enchant, level);
         }
     }
 
-    /// Randomly enchants the itemStack based on the level (identical to using an enchantment table).
-    public static void enchantItem(ItemStack itemStack, int level) {
-        EffectHelper.enchantItem(_MobPropertiesMod.random, itemStack, level);
+    // Randomly enchants the itemStack based on the level (identical to using an enchantment table).
+    public static void enchantItem(ItemStack itemStack, int level, boolean treasure) {
+        EffectHelper.enchantItem(ModMobProperties.random, itemStack, level, treasure);
     }
 
-    public static void enchantItem(Random random, ItemStack itemStack, int level) {
-        EnchantmentHelper.addRandomEnchantment(random, itemStack, level);
+    public static void enchantItem(Random random, ItemStack itemStack, int level, boolean treasure) {
+        EnchantmentHelper.addRandomEnchantment(random, itemStack, level, treasure);
     }
 
-    /// Adds a line of text to the item stack's infobox.
+    // Adds a line of text to the item stack's infobox.
     public static void addItemText(ItemStack itemStack, String text) {
-        if (itemStack.stackTagCompound == null) {
-            itemStack.setTagCompound(new NBTTagCompound());
-        }
-        if (!itemStack.stackTagCompound.hasKey("display", Constants.NBT.TAG_COMPOUND)) {
-            itemStack.stackTagCompound.setTag("display", new NBTTagCompound());
-        }
-        NBTTagCompound displayTag = itemStack.stackTagCompound.getCompoundTag("display");
-        if (!displayTag.hasKey("Lore", Constants.NBT.TAG_LIST)) {
-            displayTag.setTag("Lore", new NBTTagList());
+    	String loreList = "Lore";
+        NBTTagCompound displayTag = itemStack.getSubCompound("display", true);
+        if (!displayTag.hasKey(loreList, Constants.NBT.TAG_LIST)) {
+            displayTag.setTag(loreList, new NBTTagList());
         }
         NBTTagString stringTag = new NBTTagString(text);
-        displayTag.getTagList("Lore", Constants.NBT.TAG_STRING).appendTag(stringTag);
+        displayTag.getTagList(loreList, Constants.NBT.TAG_STRING).appendTag(stringTag);
     }
 
-    /// Sets the item's color. No effect on most items.
+    // Sets the item's color. No effect on most items.
     public static void dye(ItemStack itemStack, int color) {
-        if (itemStack.stackTagCompound == null) {
-            itemStack.setTagCompound(new NBTTagCompound());
-        }
-        if (!itemStack.stackTagCompound.hasKey("display", Constants.NBT.TAG_COMPOUND)) {
-            itemStack.stackTagCompound.setTag("display", new NBTTagCompound());
-        }
-        itemStack.stackTagCompound.getCompoundTag("display").setInteger("color", color);
+        itemStack.getSubCompound("display", true).setInteger("color", color);
     }
 
-    /// Adds a custom potion effect to the entity (can put regen on undead, poison on spiders, etc.).
-    public static void addPotionEffect(EntityLivingBase entity, int id, int duration, int amplifier, boolean ambient) {
+    // Adds a custom potion effect to the entity (can put regen on undead, poison on spiders, etc.).
+    public static void addPotionEffect(EntityLivingBase entity, Potion potion, int duration, int amplifier, boolean ambient, boolean particles) {
         NBTTagCompound tag = new NBTTagCompound();
         entity.writeToNBT(tag);
-        if (!tag.hasKey("ActiveEffects", Constants.NBT.TAG_LIST)) {
-            tag.setTag("ActiveEffects", new NBTTagList());
+    	String entityPotionList = "ActiveEffects";
+        if (!tag.hasKey(entityPotionList, Constants.NBT.TAG_LIST)) {
+            tag.setTag(entityPotionList, new NBTTagList());
         }
         NBTTagCompound potionTag = new NBTTagCompound();
-        if (id != 0) {
-            potionTag.setByte("Id", (byte) id);
+        if (potion != null) {
+            potionTag.setByte("Id", (byte) Potion.getIdFromPotion(potion));
         }
         if (duration != 0) {
             potionTag.setInteger("Duration", duration);
@@ -104,43 +98,41 @@ public abstract class EffectHelper {
         if (ambient) {
             potionTag.setBoolean("Ambient", ambient);
         }
-        tag.getTagList("ActiveEffects", Constants.NBT.TAG_COMPOUND).appendTag(potionTag);
+        potionTag.setBoolean("ShowParticles", particles);
+        tag.getTagList(entityPotionList, Constants.NBT.TAG_COMPOUND).appendTag(potionTag);
         entity.readFromNBT(tag);
     }
 
-    /// Adds a custom potion effect to the item stack.
-    public static void addPotionEffect(ItemStack itemStack, int id, int duration, int amplifier, boolean ambient) {
-        if (itemStack.stackTagCompound == null) {
-            itemStack.stackTagCompound = new NBTTagCompound();
-        }
-        if (!itemStack.stackTagCompound.hasKey("CustomPotionEffects", Constants.NBT.TAG_LIST)) {
-            itemStack.stackTagCompound.setTag("CustomPotionEffects", new NBTTagList());
+    // Adds a custom potion effect to the item stack.
+    public static void addPotionEffect(ItemStack itemStack, Potion potion, int duration, int amplifier, boolean ambient, boolean particles) {
+    	String itemPotionList = "CustomPotionEffects";
+        if (!itemStack.hasTagCompound() || !itemStack.getTagCompound().hasKey(itemPotionList, Constants.NBT.TAG_LIST)) {
+            itemStack.setTagInfo(itemPotionList, new NBTTagList());
         }
         NBTTagCompound tag = new NBTTagCompound();
-        tag.setByte("Id", (byte) id);
+        tag.setByte("Id", (byte) Potion.getIdFromPotion(potion));
         tag.setInteger("Duration", duration);
         tag.setByte("Amplifier", (byte) amplifier);
         tag.setBoolean("Ambient", ambient);
-        itemStack.stackTagCompound.getTagList("CustomPotionEffects", Constants.NBT.TAG_COMPOUND).appendTag(tag);
+        tag.setBoolean("ShowParticles", particles);
+        itemStack.getTagCompound().getTagList(itemPotionList, Constants.NBT.TAG_COMPOUND).appendTag(tag);
     }
 
-    /// Adds a custom attribute modifier to the item stack.
+    // Adds a custom attribute modifier to the item stack.
     public static void addModifier(ItemStack itemStack, String attribute, double value, int operation) {
-        if (itemStack.stackTagCompound == null) {
-            itemStack.stackTagCompound = new NBTTagCompound();
-        }
-        if (!itemStack.stackTagCompound.hasKey("AttributeModifiers", Constants.NBT.TAG_LIST)) {
-            itemStack.stackTagCompound.setTag("AttributeModifiers", new NBTTagList());
+    	String modifierList = "AttributeModifiers";
+        if (!itemStack.hasTagCompound() || !itemStack.getTagCompound().hasKey(modifierList, Constants.NBT.TAG_LIST)) {
+            itemStack.setTagInfo(modifierList, new NBTTagList());
         }
         NBTTagCompound tag = new NBTTagCompound();
         tag.setString("AttributeName", attribute);
-        tag.setString("Name", "MobProperties|" + Integer.toString(_MobPropertiesMod.random.nextInt(), Character.MAX_RADIX));
+        tag.setString("Name", "MobProperties|" + Integer.toString(ModMobProperties.random.nextInt(), Character.MAX_RADIX));
         tag.setDouble("Amount", value);
         tag.setInteger("Operation", operation);
         UUID id = UUID.randomUUID();
         tag.setLong("UUIDMost", id.getMostSignificantBits());
         tag.setLong("UUIDLeast", id.getLeastSignificantBits());
-        itemStack.stackTagCompound.getTagList("AttributeModifiers", Constants.NBT.TAG_COMPOUND).appendTag(tag);
+        itemStack.getTagCompound().getTagList(modifierList, Constants.NBT.TAG_COMPOUND).appendTag(tag);
     }
 
     // Saves the entity's initialization state.
@@ -280,7 +272,7 @@ public abstract class EffectHelper {
 
     // Loads legacy drops data to the drops list.
     @Deprecated
-    public static void loadLegacyDrops(EntityLivingBase entity, ArrayList<EntityItem> drops) {
+    public static void loadLegacyDrops(EntityLivingBase entity, List<EntityItem> drops) {
         if (!entity.getEntityData().hasKey(EffectHelper.TAG_BASE, Constants.NBT.TAG_COMPOUND))
             return;
         NBTTagCompound tag = entity.getEntityData().getCompoundTag(EffectHelper.TAG_BASE);
@@ -300,7 +292,7 @@ public abstract class EffectHelper {
                     itemStack.stackSize = 1;
                     while (count-- > 0) {
                         drop = new EntityItem(entity.worldObj, entity.posX, entity.posY, entity.posZ, itemStack.copy());
-                        drop.delayBeforeCanPickup = 10;
+                        drop.setDefaultPickupDelay();
                         drops.add(drop);
                     }
                 }
@@ -326,13 +318,13 @@ public abstract class EffectHelper {
 
     // Removes the item stack. Called when an item with a negative stack size is loaded.
     @Deprecated
-    private static void removeDrop(ItemStack itemStack, EntityLivingBase entity, ArrayList<EntityItem> drops) {
+    private static void removeDrop(ItemStack itemStack, EntityLivingBase entity, List<EntityItem> drops) {
         boolean infinite = itemStack.stackSize == -Integer.MAX_VALUE;
         EffectHelper.removeDrop(itemStack, infinite, entity, drops);
     }
 
     @Deprecated
-    private static int removeDrop(ItemStack itemStack, boolean infinite, EntityLivingBase entity, ArrayList<EntityItem> drops) {
+    private static int removeDrop(ItemStack itemStack, boolean infinite, EntityLivingBase entity, List<EntityItem> drops) {
         EntityItem drop;
         for (Iterator<EntityItem> iterator = drops.iterator(); iterator.hasNext();) {
             drop = iterator.next();

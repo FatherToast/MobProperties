@@ -1,15 +1,17 @@
 package toast.mobProperties.entry;
 
+import com.google.gson.JsonObject;
+
 import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommandListener;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ServerCommandManager;
 import net.minecraft.server.MinecraftServer;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.MobCommandSender;
-import toast.mobProperties.MobPropertyException;
-
-import com.google.gson.JsonObject;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobCommandSender;
+import toast.mobProperties.util.MobPropertyException;
 
 public class EntryCommand extends EntryAbstract {
 
@@ -46,14 +48,13 @@ public class EntryCommand extends EntryAbstract {
     // Initializes the entity's stats.
     @Override
     public void init(MobStatsInfo mobStats) {
-        MinecraftServer server = MinecraftServer.getServer();
+        MinecraftServer server = mobStats.theEntity.getServer();
         if (server != null) {
             ICommandManager commandManager = server.getCommandManager();
+            ICommandListener commandListener = commandManager instanceof ICommandListener ? (ICommandListener) commandManager : null;
 
-            ServerCommandManager admin = null; // Used for silencing commands
-            if (this.noOutput && commandManager instanceof ServerCommandManager) {
-				admin = (ServerCommandManager) commandManager;
-				CommandBase.setAdminCommander(null);
+            if (this.noOutput && commandListener != null) {
+				CommandBase.setCommandListener(null);
 			}
 
         	MobCommandSender commandSender = new MobCommandSender(mobStats.theEntity);
@@ -61,8 +62,8 @@ public class EntryCommand extends EntryAbstract {
                 commandManager.executeCommand(commandSender, this.command);
         	}
 
-        	if (admin != null) { // Reapply command admin
-				CommandBase.setAdminCommander(admin);
+        	if (this.noOutput && commandListener != null) { // Reapply command listener
+				CommandBase.setCommandListener(commandListener);
 			}
         }
     }
@@ -70,14 +71,13 @@ public class EntryCommand extends EntryAbstract {
     // Modifies the list of drops.
     @Override
     public void modifyDrops(MobDropsInfo mobDrops) {
-        MinecraftServer server = MinecraftServer.getServer();
+        MinecraftServer server = mobDrops.theEntity.getServer();
         if (server != null) {
             ICommandManager commandManager = server.getCommandManager();
+            ICommandListener commandListener = commandManager instanceof ICommandListener ? (ICommandListener) commandManager : null;
 
-            ServerCommandManager admin = null; // Used for silencing commands
-            if (this.noOutput && commandManager instanceof ServerCommandManager) {
-				admin = (ServerCommandManager) commandManager;
-				CommandBase.setAdminCommander(null);
+            if (this.noOutput && commandListener != null) {
+				CommandBase.setCommandListener(null);
 			}
 
         	MobCommandSender commandSender = new MobCommandSender(mobDrops.theEntity);
@@ -85,8 +85,8 @@ public class EntryCommand extends EntryAbstract {
                 commandManager.executeCommand(commandSender, this.command);
         	}
 
-        	if (admin != null) { // Reapply command admin
-				CommandBase.setAdminCommander(admin);
+        	if (this.noOutput && commandListener != null) { // Reapply command listener
+				CommandBase.setCommandListener(commandListener);
 			}
         }
     }

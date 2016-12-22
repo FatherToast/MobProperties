@@ -3,11 +3,11 @@ package toast.mobProperties.entry.drops;
 import java.util.HashMap;
 
 import net.minecraft.nbt.NBTTagCompound;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.MobPropertyException;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.MobDropsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 import com.google.gson.JsonObject;
 

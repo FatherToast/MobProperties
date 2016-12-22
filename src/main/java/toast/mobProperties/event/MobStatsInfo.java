@@ -1,4 +1,4 @@
-package toast.mobProperties.entry;
+package toast.mobProperties.event;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,8 +9,8 @@ import java.util.UUID;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
-import toast.mobProperties.EffectHelper;
-import toast.mobProperties.IProperty;
+import toast.mobProperties.entry.IProperty;
+import toast.mobProperties.util.EffectHelper;
 
 public class MobStatsInfo {
     // The name for this mod's modifiers.

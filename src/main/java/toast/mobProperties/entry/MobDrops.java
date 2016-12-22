@@ -1,4 +1,4 @@
-package toast.mobProperties;
+package toast.mobProperties.entry;
 
 import java.util.List;
 
@@ -6,15 +6,6 @@ import net.minecraft.nbt.NBTTagList;
 import toast.mobProperties.api.DropEntry;
 import toast.mobProperties.api.DropsHelper;
 import toast.mobProperties.api.IPropertyDrops;
-import toast.mobProperties.entry.EntryCommand;
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.MobDropsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
-import toast.mobProperties.entry.NBTStatsInfo;
-import toast.mobProperties.entry.PropertyChoose;
-import toast.mobProperties.entry.PropertyExternal;
-import toast.mobProperties.entry.PropertyGroup;
-import toast.mobProperties.entry.PropertyGroupConditional;
 import toast.mobProperties.entry.drops.EntryDropsAdd;
 import toast.mobProperties.entry.drops.EntryDropsDefault;
 import toast.mobProperties.entry.drops.EntryDropsRemove;
@@ -22,6 +13,12 @@ import toast.mobProperties.entry.drops.EntryDropsSchematic;
 import toast.mobProperties.entry.drops.EntryDropsSetBlock;
 import toast.mobProperties.entry.drops.EntryDropsSpawn;
 import toast.mobProperties.entry.drops.EntryDropsXP;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

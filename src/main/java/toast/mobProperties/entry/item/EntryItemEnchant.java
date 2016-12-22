@@ -1,25 +1,27 @@
 package toast.mobProperties.entry.item;
 
 import net.minecraft.enchantment.Enchantment;
-import toast.mobProperties.EffectHelper;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.ItemStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.util.EffectHelper;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 
 public class EntryItemEnchant extends EntryAbstract {
     /// The enchantment id.
-    private final int effectId;
+    private final Enchantment effect;
     /// The min and max enchantment levels.
     private final double[] levels;
+    /// If treasure enchantments can be rolled (ignored if effect is not null).
+    private final boolean treasure;
 
     public EntryItemEnchant(String path, JsonObject root, int index, JsonObject node, IPropertyReader loader) {
         super(node, path);
-        Enchantment enchant = FileHelper.readEnchant(node, path, "id", false);
-        this.effectId = enchant == null ? -1 : enchant.effectId;
+        this.effect = FileHelper.readEnchant(node, path, "id", false);
         this.levels = FileHelper.readCounts(node, path, "level", 1.0, 1.0);
+        this.treasure = FileHelper.readBoolean(node, path, "treasure", false);
     }
 
     /// Returns an array of required field names.
@@ -31,7 +33,7 @@ public class EntryItemEnchant extends EntryAbstract {
     /// Returns an array of optional field names.
     @Override
     public String[] getOptionalFields() {
-        return new String[] { "id", "level" };
+        return new String[] { "id", "level", "treasure" };
     }
 
     /// Modifies the item.
@@ -39,11 +41,11 @@ public class EntryItemEnchant extends EntryAbstract {
     public void modifyItem(ItemStatsInfo itemStats) {
     	try {
 	        int level = FileHelper.getCount(this.levels, itemStats.random);
-	        if (this.effectId < 0) {
-	            EffectHelper.enchantItem(itemStats.random, itemStats.theItem, level);
+	        if (this.effect == null) {
+	            EffectHelper.enchantItem(itemStats.random, itemStats.theItem, level, treasure);
 	        }
 	        else {
-	            EffectHelper.enchantItem(itemStats.theItem, this.effectId, level);
+	            EffectHelper.enchantItem(itemStats.theItem, this.effect, level);
 	        }
     	}
     	catch (Exception ex) {

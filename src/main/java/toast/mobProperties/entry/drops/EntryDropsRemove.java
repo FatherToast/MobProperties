@@ -3,13 +3,13 @@ package toast.mobProperties.entry.drops;
 import java.util.List;
 
 import net.minecraft.item.Item;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.ItemStats;
 import toast.mobProperties.api.DropEntry;
 import toast.mobProperties.api.IPropertyDrops;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.MobDropsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.entry.ItemStats;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 

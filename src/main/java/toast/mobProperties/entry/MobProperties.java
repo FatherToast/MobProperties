@@ -1,4 +1,4 @@
-package toast.mobProperties;
+package toast.mobProperties.entry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,10 +8,12 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import toast.mobProperties.api.DropEntry;
 import toast.mobProperties.api.IPropertyDrops;
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.MobDropsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
-import toast.mobProperties.entry.NBTStatsInfo;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

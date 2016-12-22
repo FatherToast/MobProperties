@@ -1,9 +1,9 @@
-package toast.mobProperties;
+package toast.mobProperties.entry;
 
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.MobDropsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
-import toast.mobProperties.entry.NBTStatsInfo;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.event.NBTStatsInfo;
 
 public interface IProperty
 {

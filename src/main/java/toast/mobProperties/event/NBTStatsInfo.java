@@ -1,4 +1,4 @@
-package toast.mobProperties.entry;
+package toast.mobProperties.event;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,7 +71,7 @@ public class NBTStatsInfo {
         }
 
         NBTTagCompound copyFrom = (NBTTagCompound) wrapper.getTag();
-        for (String name : (Collection<String>) copyFrom.func_150296_c()) {
+        for (String name : copyFrom.getKeySet()) {
             NBTBase tag = copyFrom.getTag(name);
             if (tag.getClass() == NBTTagCompound.class) {
                 this.writeCompound(copyTo, new NBTWrapper(name, tag));

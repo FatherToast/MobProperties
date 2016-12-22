@@ -1,13 +1,8 @@
-package toast.mobProperties;
+package toast.mobProperties.entry;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import toast.mobProperties.entry.ItemStatsInfo;
-import toast.mobProperties.entry.PropertyChoose;
-import toast.mobProperties.entry.PropertyExternal;
-import toast.mobProperties.entry.PropertyGroup;
-import toast.mobProperties.entry.PropertyGroupConditional;
 import toast.mobProperties.entry.item.EntryItemColor;
 import toast.mobProperties.entry.item.EntryItemEnchant;
 import toast.mobProperties.entry.item.EntryItemLore;
@@ -15,6 +10,9 @@ import toast.mobProperties.entry.stats.EntryStatsModifier;
 import toast.mobProperties.entry.stats.EntryStatsNBT;
 import toast.mobProperties.entry.stats.EntryStatsName;
 import toast.mobProperties.entry.stats.EntryStatsPotion;
+import toast.mobProperties.event.ItemStatsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

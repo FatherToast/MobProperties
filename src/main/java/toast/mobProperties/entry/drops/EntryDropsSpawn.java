@@ -4,13 +4,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.MobStats;
-import toast.mobProperties.NBTStats;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.MobDropsInfo;
-import toast.mobProperties.entry.MobStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.entry.MobStats;
+import toast.mobProperties.entry.NBTStats;
+import toast.mobProperties.event.MobDropsInfo;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 

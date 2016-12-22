@@ -4,14 +4,17 @@ import java.util.Random;
 
 import net.minecraft.command.ServerCommandManager;
 import net.minecraftforge.common.config.Configuration;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import toast.mobProperties.event.EventHandler;
+import toast.mobProperties.event.TickHandler;
+import toast.mobProperties.util.FileHelper;
 
-@Mod(modid = _MobPropertiesMod.MODID, name = "Mob Properties", version = _MobPropertiesMod.VERSION)
-public class _MobPropertiesMod {
+@Mod(modid = ModMobProperties.MODID, name = "Mob Properties", version = ModMobProperties.VERSION)
+public class ModMobProperties {
     /* TO DO *\
         > improvements
             > allow "lore" to accept string arrays
@@ -25,20 +28,18 @@ public class _MobPropertiesMod {
             > nbt-defined variables
     \* ** ** */
     // This mod's id.
-    public static final String MODID = "MobProperties";
+    public static final String MODID = "mob_properties";
     // This mod's version.
-    public static final String VERSION = "1.0.2";
+    public static final String VERSION = "1.0.3";
 
-    // If true, this mod starts up in debug mode.
-    public static final boolean debug = false;
     // The mod's random number generator.
     public static final Random random = new Random();
 
     // Called before initialization. Loads the properties/configurations.
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        _MobPropertiesMod.debugConsole("Loading in debug mode!");
-        Properties.init(new Configuration(event.getSuggestedConfigurationFile()));
+        Properties.load(new Configuration(event.getSuggestedConfigurationFile()));
+        ModMobProperties.logDebug("Loading in debug mode!");
         FileHelper.init(event.getModConfigurationDirectory());
     }
 
@@ -52,11 +53,11 @@ public class _MobPropertiesMod {
     // Called after initialization. Used to check for dependencies.
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        _MobPropertiesMod.console("Loading mob properties...");
-        _MobPropertiesMod.console("Loaded " + FileHelper.load() + " mob properties!");
-        if (!EventHandler.DISABLED && Properties.getBoolean(Properties.GENERAL, "auto_generate_files")) {
-            _MobPropertiesMod.console("Generating default mob properties...");
-            _MobPropertiesMod.console("Generated " + FileHelper.generateDefaults() + " mob properties!");
+        ModMobProperties.log("Loading mob properties...");
+        ModMobProperties.log("Loaded " + FileHelper.load() + " mob properties!");
+        if (Properties.get().GENERAL.AUTO_GEN_FILES) {
+            ModMobProperties.log("Generating default mob properties...");
+            ModMobProperties.log("Generated " + FileHelper.generateDefaults() + " mob properties!");
         }
     }
 
@@ -88,22 +89,34 @@ public class _MobPropertiesMod {
         return Character.toString(Character.toLowerCase(string.charAt(0))) + string.substring(1);
     }
 
-    // Prints the message to the console with this mod's name tag.
-    public static void console(String message) {
-        System.out.println("[" + _MobPropertiesMod.MODID + "] " + message);
-    }
+	public static boolean debug() {
+		return Properties.get().GENERAL.DEBUG;
+	}
 
-    // Prints the message to the console with this mod's name tag if debugging is enabled.
-    public static void debugConsole(String message) {
-        if (_MobPropertiesMod.debug) {
-            System.out.println("[" + _MobPropertiesMod.MODID + "] (debug) " + message);
-        }
-    }
+	// Prints the message to the console with this mod's name tag if debugging is enabled.
+	public static void logDebug(String message) {
+		if (ModMobProperties.debug()) ModMobProperties.log("(debug) " + message);
+	}
 
-    // Throws a runtime exception with a message and this mod's name tag if debugging is enabled.
-    public static void debugException(String message) {
-        if (_MobPropertiesMod.debug)
-            throw new RuntimeException("[" + _MobPropertiesMod.MODID + "] " + message);
-		_MobPropertiesMod.console("[ERROR] " + message);
-    }
+	// Prints the message to the console with this mod's name tag.
+	public static void log(String message) {
+		System.out.println("[" + ModMobProperties.MODID + "] " + message);
+	}
+
+	// Prints the message to the console with this mod's name tag if debugging is enabled.
+	public static void logWarning(String message) {
+		ModMobProperties.log("[WARNING] " + message);
+	}
+
+	// Prints the message to the console with this mod's name tag if debugging is enabled.
+	public static void logError(String message) {
+		if (ModMobProperties.debug())
+			throw new RuntimeException("[" + ModMobProperties.MODID + "] [ERROR] " + message);
+		ModMobProperties.log("[ERROR] " + message);
+	}
+
+	// Throws a runtime exception with a message and this mod's name tag.
+	public static void exception(String message) {
+		throw new RuntimeException("[" + ModMobProperties.MODID + "] [FATAL ERROR] " + message);
+	}
 }

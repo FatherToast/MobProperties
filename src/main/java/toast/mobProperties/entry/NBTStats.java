@@ -1,14 +1,9 @@
-package toast.mobProperties;
+package toast.mobProperties.entry;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import toast.mobProperties.entry.NBTStatsInfo;
-import toast.mobProperties.entry.PropertyChoose;
-import toast.mobProperties.entry.PropertyExternal;
-import toast.mobProperties.entry.PropertyGroup;
-import toast.mobProperties.entry.PropertyGroupConditional;
 import toast.mobProperties.entry.nbt.EntryNBTByte;
 import toast.mobProperties.entry.nbt.EntryNBTByteArray;
 import toast.mobProperties.entry.nbt.EntryNBTChestLoot;
@@ -25,6 +20,9 @@ import toast.mobProperties.entry.nbt.EntryNBTLong;
 import toast.mobProperties.entry.nbt.EntryNBTPotionId;
 import toast.mobProperties.entry.nbt.EntryNBTShort;
 import toast.mobProperties.entry.nbt.EntryNBTString;
+import toast.mobProperties.event.NBTStatsInfo;
+import toast.mobProperties.util.FileHelper;
+import toast.mobProperties.util.MobPropertyException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

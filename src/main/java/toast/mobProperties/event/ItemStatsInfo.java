@@ -1,4 +1,4 @@
-package toast.mobProperties.entry;
+package toast.mobProperties.event;
 
 import java.util.Random;
 import net.minecraft.entity.EntityLivingBase;

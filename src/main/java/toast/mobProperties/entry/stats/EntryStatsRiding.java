@@ -4,12 +4,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
-import toast.mobProperties.FileHelper;
-import toast.mobProperties.IPropertyReader;
-import toast.mobProperties.MobStats;
-import toast.mobProperties.NBTStats;
 import toast.mobProperties.entry.EntryAbstract;
-import toast.mobProperties.entry.MobStatsInfo;
+import toast.mobProperties.entry.IPropertyReader;
+import toast.mobProperties.entry.MobStats;
+import toast.mobProperties.entry.NBTStats;
+import toast.mobProperties.event.MobStatsInfo;
+import toast.mobProperties.util.FileHelper;
 
 import com.google.gson.JsonObject;
 
@@ -57,10 +57,10 @@ public class EntryStatsRiding extends EntryAbstract {
             this.initEntity(mobStats.theEntity, entity, mobStats);
 
             if (this.isMount) {
-                mobStats.theEntity.mountEntity(entity);
+                mobStats.theEntity.startRiding(entity, true);
             }
             else {
-                entity.mountEntity(mobStats.theEntity);
+                entity.startRiding(mobStats.theEntity, true);
             }
             mobStats.theEntity.worldObj.spawnEntityInWorld(entity);
         }

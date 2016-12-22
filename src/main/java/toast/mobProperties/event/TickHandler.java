@@ -1,20 +1,23 @@
-package toast.mobProperties;
+package toast.mobProperties.event;
 
 import java.util.ArrayDeque;
 
 import net.minecraft.entity.EntityLivingBase;
-import toast.mobProperties.entry.MobStatsInfo;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import toast.mobProperties.entry.IProperty;
+import toast.mobProperties.entry.MobProperties;
+import toast.mobProperties.util.EffectHelper;
 
 public class TickHandler {
     // Stack of entities that need to be spawned.
     public static ArrayDeque<InitEntry> entityStack = new ArrayDeque<InitEntry>();
 
     public TickHandler() {
-        FMLCommonHandler.instance().bus().register(this);
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     /**
